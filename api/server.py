@@ -11,9 +11,9 @@ from pathlib import Path
 import os
 import platform
 import shutil
-import subprocess
 import time
 import uuid
+
 
 from auth import (
     ensure_database,
@@ -23,12 +23,14 @@ from auth import (
     cleanup_sessions
 )
 
+
 from services.service_manager import (
     service_status,
     all_services,
     perform_operation,
     service_logs
 )
+
 
 from deployment import (
     deploy,
@@ -37,13 +39,23 @@ from deployment import (
 )
 
 
+from domain_manager import (
+    get_all_domains,
+    get_domain,
+    get_enabled_domains,
+    domain_health
+)
+
+
 # =====================================================
 # KULZZY SERVER API
+# VERSION 5.0.0
 # =====================================================
 
 app = Flask(__name__)
 
 START_TIME = time.time()
+
 
 STORAGE_ROOT = Path(
     os.environ.get(
@@ -52,7 +64,13 @@ STORAGE_ROOT = Path(
     )
 ).resolve()
 
-MAX_UPLOAD_SIZE = 500 * 1024 * 1024
+
+MAX_UPLOAD_SIZE = (
+    500 *
+    1024 *
+    1024
+)
+
 
 app.config[
     "MAX_CONTENT_LENGTH"
@@ -60,12 +78,19 @@ app.config[
 
 
 ALLOWED_AREAS = {
+
     "audio",
+
     "celebrants",
+
     "websites",
+
     "repositories",
+
     "uploads",
+
     "backups"
+
 }
 
 
@@ -76,39 +101,68 @@ ALLOWED_AREAS = {
 def require_auth(function):
 
     @wraps(function)
-    def protected(*args, **kwargs):
+    def protected(
+        *args,
+        **kwargs
+    ):
 
-        authorization = request.headers.get(
-            "Authorization",
-            ""
+        authorization = (
+            request.headers.get(
+                "Authorization",
+                ""
+            )
         )
+
 
         if not authorization.startswith(
             "Bearer "
         ):
 
             return jsonify({
-                "success": False,
-                "error": "Authentication required"
+
+                "success":
+                    False,
+
+                "error":
+                    "Authentication required"
+
             }), 401
 
-        token = authorization[7:].strip()
 
-        session = get_session(token)
+        token = (
+            authorization[7:]
+            .strip()
+        )
+
+
+        session = get_session(
+            token
+        )
+
 
         if not session:
 
             return jsonify({
-                "success": False,
-                "error": "Invalid or expired session"
+
+                "success":
+                    False,
+
+                "error":
+                    "Invalid or expired session"
+
             }), 401
 
-        request.kulzzy_admin = session
+
+        request.kulzzy_admin = (
+            session
+        )
+
 
         return function(
             *args,
             **kwargs
         )
+
 
     return protected
 
@@ -121,21 +175,31 @@ def require_owner(function):
 
     @wraps(function)
     @require_auth
-    def protected(*args, **kwargs):
+    def protected(
+        *args,
+        **kwargs
+    ):
 
         if request.kulzzy_admin.get(
             "role"
         ) != "owner":
 
             return jsonify({
-                "success": False,
-                "error": "Owner permission required"
+
+                "success":
+                    False,
+
+                "error":
+                    "Owner permission required"
+
             }), 403
+
 
         return function(
             *args,
             **kwargs
         )
+
 
     return protected
 
@@ -144,32 +208,42 @@ def require_owner(function):
 # STORAGE SECURITY
 # =====================================================
 
-def safe_area(area):
+def safe_area(
+    area
+):
 
     if area not in ALLOWED_AREAS:
 
         return None
+
 
     path = (
         STORAGE_ROOT /
         area
     ).resolve()
 
+
     root_string = (
-        str(STORAGE_ROOT) +
+        str(STORAGE_ROOT)
+        +
         os.sep
     )
 
-    if not str(path).startswith(
+
+    if not str(
+        path
+    ).startswith(
         root_string
     ):
 
         return None
 
+
     path.mkdir(
         parents=True,
         exist_ok=True
     )
+
 
     return path
 
@@ -183,33 +257,43 @@ def safe_file(
         area
     )
 
+
     if root is None:
 
         return None
+
 
     filename = Path(
         filename
     ).name
 
+
     if not filename:
 
         return None
+
 
     path = (
         root /
         filename
     ).resolve()
 
+
     root_string = (
-        str(root) +
+        str(root)
+        +
         os.sep
     )
 
-    if not str(path).startswith(
+
+    if not str(
+        path
+    ).startswith(
         root_string
     ):
 
         return None
+
 
     return path
 
@@ -250,6 +334,7 @@ def get_memory():
             psutil.virtual_memory()
         )
 
+
         return {
 
             "total_gb":
@@ -274,15 +359,19 @@ def get_memory():
 
         }
 
+
     except Exception:
 
         return {
 
-            "total_gb": 0,
+            "total_gb":
+                0,
 
-            "used_gb": 0,
+            "used_gb":
+                0,
 
-            "usage_percent": 0
+            "usage_percent":
+                0
 
         }
 
@@ -299,21 +388,25 @@ def get_storage():
             STORAGE_ROOT
         )
 
+
         total_tb = (
             disk.total /
             (1024 ** 4)
         )
+
 
         used_tb = (
             disk.used /
             (1024 ** 4)
         )
 
+
         usage_percent = (
             disk.used /
             disk.total *
             100
         )
+
 
         return {
 
@@ -337,15 +430,19 @@ def get_storage():
 
         }
 
+
     except Exception:
 
         return {
 
-            "total_tb": 0,
+            "total_tb":
+                0,
 
-            "used_tb": 0,
+            "used_tb":
+                0,
 
-            "usage_percent": 0
+            "usage_percent":
+                0
 
         }
 
@@ -362,24 +459,30 @@ def get_uptime():
         START_TIME
     )
 
+
     days = (
         seconds //
         86400
     )
 
+
     seconds %= 86400
+
 
     hours = (
         seconds //
         3600
     )
 
+
     seconds %= 3600
+
 
     minutes = (
         seconds //
         60
     )
+
 
     return (
         f"{days}d "
@@ -410,7 +513,7 @@ def home():
             "online",
 
         "version":
-            "4.0.0"
+            "5.0.0"
 
     })
 
@@ -425,9 +528,13 @@ def home():
 )
 def login():
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    data = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
 
     username = str(
         data.get(
@@ -436,6 +543,7 @@ def login():
         )
     ).strip()
 
+
     password = str(
         data.get(
             "password",
@@ -443,32 +551,42 @@ def login():
         )
     )
 
-    if not username or not password:
+
+    if (
+        not username
+        or
+        not password
+    ):
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Username and password are required."
 
         }), 400
 
+
     result = authenticate(
         username,
         password
     )
 
+
     if not result:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid username or password."
 
         }), 401
+
 
     return jsonify({
 
@@ -492,16 +610,24 @@ def login():
 @require_auth
 def logout():
 
-    authorization = request.headers.get(
-        "Authorization",
-        ""
+    authorization = (
+        request.headers.get(
+            "Authorization",
+            ""
+        )
     )
 
-    token = authorization[7:].strip()
+
+    token = (
+        authorization[7:]
+        .strip()
+    )
+
 
     revoke_session(
         token
     )
+
 
     return jsonify({
 
@@ -552,9 +678,11 @@ def server_status():
 
     cleanup_sessions()
 
+
     memory = get_memory()
 
     storage = get_storage()
+
 
     return jsonify({
 
@@ -576,7 +704,7 @@ def server_status():
                 "production",
 
             "version":
-                "4.0.0",
+                "5.0.0",
 
             "hostname":
                 platform.node(),
@@ -588,6 +716,7 @@ def server_status():
                 get_uptime()
 
         },
+
 
         "hardware": {
 
@@ -607,8 +736,10 @@ def server_status():
 
             },
 
+
             "memory":
                 memory,
+
 
             "storage":
                 storage
@@ -641,7 +772,7 @@ def services_status():
 
 
 # =====================================================
-# SINGLE SERVICE STATUS
+# SINGLE SERVICE
 # =====================================================
 
 @app.route(
@@ -657,6 +788,7 @@ def single_service_status(
         service
     )
 
+
     if not result.get(
         "success",
         False
@@ -665,6 +797,7 @@ def single_service_status(
         return jsonify(
             result
         ), 404
+
 
     return jsonify(
         result
@@ -689,6 +822,7 @@ def start_service(
         "start"
     )
 
+
     if not result.get(
         "success",
         False
@@ -697,6 +831,7 @@ def start_service(
         return jsonify(
             result
         ), 400
+
 
     return jsonify({
 
@@ -733,6 +868,7 @@ def stop_service(
         "stop"
     )
 
+
     if not result.get(
         "success",
         False
@@ -741,6 +877,7 @@ def stop_service(
         return jsonify(
             result
         ), 400
+
 
     return jsonify({
 
@@ -777,6 +914,7 @@ def restart_service(
         "restart"
     )
 
+
     if not result.get(
         "success",
         False
@@ -785,6 +923,7 @@ def restart_service(
         return jsonify(
             result
         ), 400
+
 
     return jsonify({
 
@@ -821,10 +960,12 @@ def logs(
         "100"
     )
 
+
     result = service_logs(
         service,
         lines
     )
+
 
     if not result.get(
         "success",
@@ -834,6 +975,7 @@ def logs(
         return jsonify(
             result
         ), 400
+
 
     return jsonify({
 
@@ -865,11 +1007,21 @@ def deploy_server():
 
     result = deploy()
 
+
     status_code = (
+
         200
-        if result.get("success")
-        else 500
+
+        if result.get(
+            "success"
+        )
+
+        else
+
+        500
+
     )
+
 
     return jsonify(
         result
@@ -889,11 +1041,21 @@ def rollback_server():
 
     result = rollback()
 
+
     status_code = (
+
         200
-        if result.get("success")
-        else 500
+
+        if result.get(
+            "success"
+        )
+
+        else
+
+        500
+
     )
+
 
     return jsonify(
         result
@@ -913,15 +1075,145 @@ def server_health_check():
 
     result = health_check()
 
+
     status_code = (
+
         200
-        if result.get("success")
-        else 500
+
+        if result.get(
+            "success"
+        )
+
+        else
+
+        500
+
     )
+
 
     return jsonify(
         result
     ), status_code
+
+
+# =====================================================
+# DOMAIN — ALL
+# =====================================================
+
+@app.route(
+    "/api/domains",
+    methods=["GET"]
+)
+@require_auth
+def domains():
+
+    result = get_all_domains()
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 500
+
+
+    return jsonify(
+        result
+    )
+
+
+# =====================================================
+# DOMAIN — ENABLED
+# =====================================================
+
+@app.route(
+    "/api/domains/enabled",
+    methods=["GET"]
+)
+@require_auth
+def enabled_domains():
+
+    result = get_enabled_domains()
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 500
+
+
+    return jsonify(
+        result
+    )
+
+
+# =====================================================
+# DOMAIN — SINGLE
+# =====================================================
+
+@app.route(
+    "/api/domains/<path:hostname>",
+    methods=["GET"]
+)
+@require_auth
+def single_domain(
+    hostname
+):
+
+    result = get_domain(
+        hostname
+    )
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 404
+
+
+    return jsonify(
+        result
+    )
+
+
+# =====================================================
+# DOMAIN HEALTH
+# =====================================================
+
+@app.route(
+    "/api/domain-health",
+    methods=["GET"]
+)
+@require_auth
+def domain_health_status():
+
+    result = domain_health()
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 500
+
+
+    return jsonify(
+        result
+    )
 
 
 # =====================================================
@@ -933,24 +1225,30 @@ def server_health_check():
     methods=["GET"]
 )
 @require_auth
-def list_files(area):
+def list_files(
+    area
+):
 
     root = safe_area(
         area
     )
 
+
     if root is None:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid storage area"
 
         }), 400
 
+
     files = []
+
 
     try:
 
@@ -971,16 +1269,19 @@ def list_files(area):
 
                 })
 
+
     except Exception as error:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 str(error)
 
         }), 500
+
 
     return jsonify({
 
@@ -1018,27 +1319,32 @@ def download_file(
         filename
     )
 
+
     if path is None:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid file"
 
         }), 400
 
+
     if not path.exists():
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "File not found"
 
         }), 404
+
 
     return send_file(
         path,
@@ -1055,52 +1361,63 @@ def download_file(
     methods=["POST"]
 )
 @require_auth
-def upload_file(area):
+def upload_file(
+    area
+):
 
     root = safe_area(
         area
     )
 
+
     if root is None:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid storage area"
 
         }), 400
 
+
     if "file" not in request.files:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "No file supplied"
 
         }), 400
 
+
     uploaded = request.files[
         "file"
     ]
+
 
     if not uploaded.filename:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid filename"
 
         }), 400
 
+
     original_name = Path(
         uploaded.filename
     ).name
+
 
     extension = (
         Path(
@@ -1109,16 +1426,19 @@ def upload_file(area):
         .lower()
     )
 
+
     filename = (
         uuid.uuid4().hex
         +
         extension
     )
 
+
     destination = (
         root /
         filename
     )
+
 
     try:
 
@@ -1126,16 +1446,19 @@ def upload_file(area):
             destination
         )
 
+
     except Exception as error:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 str(error)
 
         }), 500
+
 
     return jsonify({
 
@@ -1179,42 +1502,50 @@ def delete_file(
         filename
     )
 
+
     if path is None:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "Invalid file"
 
         }), 400
 
+
     if not path.exists():
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 "File not found"
 
         }), 404
 
+
     try:
 
         path.unlink()
+
 
     except Exception as error:
 
         return jsonify({
 
-            "success": False,
+            "success":
+                False,
 
             "error":
                 str(error)
 
         }), 500
+
 
     return jsonify({
 
@@ -1237,11 +1568,14 @@ def delete_file(
 @app.errorhandler(
     413
 )
-def file_too_large(error):
+def file_too_large(
+    error
+):
 
     return jsonify({
 
-        "success": False,
+        "success":
+            False,
 
         "error":
             "File exceeds the 500 MB upload limit."
@@ -1256,11 +1590,14 @@ def file_too_large(error):
 @app.errorhandler(
     500
 )
-def internal_error(error):
+def internal_error(
+    error
+):
 
     return jsonify({
 
-        "success": False,
+        "success":
+            False,
 
         "error":
             "Internal server error"
@@ -1276,6 +1613,7 @@ if __name__ == "__main__":
 
     ensure_database()
 
+
     for area in ALLOWED_AREAS:
 
         (
@@ -1286,29 +1624,36 @@ if __name__ == "__main__":
             exist_ok=True
         )
 
+
     print(
         "========================================"
     )
+
 
     print(
         "       KULZZY SERVER API"
     )
 
+
     print(
-        "       VERSION 4.0.0"
+        "       VERSION 5.0.0"
     )
+
 
     print(
         "========================================"
     )
 
+
     print(
         f"Storage: {STORAGE_ROOT}"
     )
 
+
     print(
         "API: http://0.0.0.0:5000"
     )
+
 
     app.run(
 
