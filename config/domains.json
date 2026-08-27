@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+
+  "primary_domain": "kulzzyradio.com",
+
+  "domains": {
+    "root": {
+      "hostname": "kulzzyradio.com",
+      "service": "website",
+      "enabled": true
+    },
+
+    "www": {
+      "hostname": "www.kulzzyradio.com",
+      "service": "website",
+      "enabled": true
+    },
+
+    "control": {
+      "hostname": "control.kulzzyradio.com",
+      "service": "server-control-center",
+      "enabled": true
+    },
+
+    "api": {
+      "hostname": "api.kulzzyradio.com",
+      "service": "kulzzy-api",
+      "enabled": true
+    },
+
+    "code": {
+      "hostname": "code.kulzzyradio.com",
+      "service": "kulzzy-code-hub",
+      "enabled": true
+    },
+
+    "radio": {
+      "hostname": "radio.kulzzyradio.com",
+      "service": "kulzzy-radio",
+      "enabled": true
+    },
+
+    "storage": {
+      "hostname": "storage.kulzzyradio.com",
+      "service": "kulzzy-storage",
+      "enabled": true
+    }
+  },
+
+  "network": {
+    "gateway": "80",
+    "https": "443",
+    "api": "5000"
+  },
+
+  "server": {
+    "hostname": "kulzzy-server-01",
+    "role": "primary",
+    "environment": "production"
+  }
+}
