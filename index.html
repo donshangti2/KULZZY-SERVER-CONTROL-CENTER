@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kulzzy Server Control Center</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #071426;
+    color: white;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+#loginScreen {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 420px;
+    background: #0d2038;
+    border: 1px solid #d4af37;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+
+.logo {
+    text-align: center;
+    color: #d4af37;
+    font-size: 30px;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #b9c4d0;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    margin-bottom: 7px;
+    color: #d4af37;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    border: 1px solid #314861;
+    background: #071426;
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: #d4af37;
+}
+
+.primary-btn {
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #d4af37;
+    color: #071426;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.primary-btn:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+#errorMessage {
+    margin-top: 15px;
+    color: #ff7777;
+    text-align: center;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+#dashboard {
+    min-height: 100vh;
+}
+
+header {
+    background: #0b1d32;
+    border-bottom: 1px solid #263b52;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.header-title {
+    color: #d4af37;
+    font-weight: 900;
+    font-size: 22px;
+}
+
+.header-user {
+    color: #b9c4d0;
+    font-size: 14px;
+}
+
+.logout-btn {
+    border: 1px solid #a84c4c;
+    background: transparent;
+    color: #ff8b8b;
+    padding: 9px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+main {
+    padding: 25px;
+    max-width: 1300px;
+    margin: auto;
+}
+
+.server-banner {
+    background: linear-gradient(
+        135deg,
+        #102944,
+        #0a192c
+    );
+    border: 1px solid #d4af37;
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 25px;
+}
+
+.server-name {
+    font-size: 25px;
+    font-weight: 900;
+}
+
+.online {
+    color: #55e68b;
+    font-weight: bold;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(210px, 1fr)
+        );
+    gap: 18px;
+}
+
+.card {
+    background: #0d2038;
+    border: 1px solid #263b52;
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.card-title {
+    color: #9eacbb;
+    font-size: 13px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.card-value {
+    font-size: 25px;
+    font-weight: 900;
+    color: #d4af37;
+}
+
+.section {
+    margin-top: 25px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 15px;
+    color: #d4af37;
+}
+
+.services {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(180px, 1fr)
+        );
+    gap: 12px;
+}
+
+.service {
+    background: #0d2038;
+    border: 1px solid #263b52;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.service-status {
+    color: #55e68b;
+    font-weight: bold;
+}
+
+.refresh-info {
+    margin-top: 25px;
+    color: #7f91a5;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+
+    main {
+        padding: 15px;
+    }
+
+    header {
+        align-items: flex-start;
+    }
+
+    .server-name {
+        font-size: 21px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     LOGIN SCREEN
+========================= -->
+
+<section id="loginScreen">
+
+    <div class="login-box">
+
+        <div class="logo">
+            KULZZY
+        </div>
+
+        <div class="subtitle">
+            Server Control Center
+        </div>
+
+        <form id="loginForm">
+
+            <div class="form-group">
+
+                <label for="username">
+                    Administrator Username
+                </label>
+
+                <input
+                    id="username"
+                    type="text"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </div>
+
+            <button
+                id="loginButton"
+                class="primary-btn"
+                type="submit"
+            >
+                SIGN IN
+            </button>
+
+            <div id="errorMessage"></div>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     DASHBOARD
+========================= -->
+
+<section
+    id="dashboard"
+    class="hidden"
+>
+
+    <header>
+
+        <div>
+
+            <div class="header-title">
+                KULZZY SERVER CONTROL CENTER
+            </div>
+
+            <div
+                id="loggedUser"
+                class="header-user"
+            ></div>
+
+        </div>
+
+        <button
+            id="logoutButton"
+            class="logout-btn"
+        >
+            LOGOUT
+        </button>
+
+    </header>
+
+
+    <main>
+
+        <div class="server-banner">
+
+            <div
+                id="serverName"
+                class="server-name"
+            >
+                Kulzzy Server #01
+            </div>
+
+            <div>
+                Status:
+                <span
+                    id="serverStatus"
+                    class="online"
+                >
+                    Checking...
+                </span>
+            </div>
+
+        </div>
+
+
+        <!-- HARDWARE -->
+
+        <div class="section">
+
+            <div class="section-title">
+                SERVER HARDWARE
+            </div>
+
+            <div class="cards">
+
+                <div class="card">
+
+                    <div class="card-title">
+                        CPU
+                    </div>
+
+                    <div
+                        id="cpuUsage"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-title">
+                        CPU Cores
+                    </div>
+
+                    <div
+                        id="cpuCores"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-title">
+                        Memory
+                    </div>
+
+                    <div
+                        id="memoryUsage"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-title">
+                        Storage
+                    </div>
+
+                    <div
+                        id="storageUsage"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SERVER INFORMATION -->
+
+        <div class="section">
+
+            <div class="section-title">
+                SERVER INFORMATION
+            </div>
+
+            <div class="cards">
+
+                <div class="card">
+
+                    <div class="card-title">
+                        Hostname
+                    </div>
+
+                    <div
+                        id="hostname"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-title">
+                        Operating System
+                    </div>
+
+                    <div
+                        id="operatingSystem"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-title">
+                        Uptime
+                    </div>
+
+                    <div
+                        id="uptime"
+                        class="card-value"
+                    >
+                        --
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SERVICES -->
+
+        <div class="section">
+
+            <div class="section-title">
+                KULZZY SERVICES
+            </div>
+
+            <div
+                id="services"
+                class="services"
+            ></div>
+
+        </div>
+
+
+        <div
+            id="refreshInfo"
+            class="refresh-info"
+        >
+            Server information updates automatically.
+        </div>
+
+    </main>
+
+</section>
+
+
+<script>
+
+const API_BASE = "";
+
+
+const loginScreen =
+    document.getElementById(
+        "loginScreen"
+    );
+
+const dashboard =
+    document.getElementById(
+        "dashboard"
+    );
+
+const loginForm =
+    document.getElementById(
+        "loginForm"
+    );
+
+const loginButton =
+    document.getElementById(
+        "loginButton"
+    );
+
+const errorMessage =
+    document.getElementById(
+        "errorMessage"
+    );
+
+const logoutButton =
+    document.getElementById(
+        "logoutButton"
+    );
+
+
+let sessionToken =
+    sessionStorage.getItem(
+        "kulzzy_session"
+    );
+
+
+function showDashboard() {
+
+    loginScreen.classList.add(
+        "hidden"
+    );
+
+    dashboard.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+function showLogin() {
+
+    dashboard.classList.add(
+        "hidden"
+    );
+
+    loginScreen.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+function setError(message) {
+
+    errorMessage.textContent =
+        message;
+
+}
+
+
+async function login(
+    username,
+    password
+) {
+
+    loginButton.disabled = true;
+
+    loginButton.textContent =
+        "SIGNING IN...";
+
+    setError("");
+
+    try {
+
+        const response =
+            await fetch(
+                API_BASE +
+                "/api/auth/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Login failed."
+            );
+
+        }
+
+
+        sessionToken =
+            data.session.token;
+
+
+        sessionStorage.setItem(
+            "kulzzy_session",
+            sessionToken
+        );
+
+
+        document.getElementById(
+            "loggedUser"
+        ).textContent =
+            "Administrator: " +
+            data.session.username;
+
+
+        showDashboard();
+
+        loadServerStatus();
+
+    }
+
+    catch (error) {
+
+        setError(
+            error.message
+        );
+
+    }
+
+    finally {
+
+        loginButton.disabled =
+            false;
+
+        loginButton.textContent =
+            "SIGN IN";
+
+    }
+
+}
+
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    if (!sessionToken) {
+
+        throw new Error(
+            "Not authenticated."
+        );
+
+    }
+
+
+    const headers =
+        options.headers || {};
+
+
+    headers[
+        "Authorization"
+    ] =
+        "Bearer " +
+        sessionToken;
+
+
+    const response =
+        await fetch(
+            API_BASE +
+            endpoint,
+            {
+                ...options,
+                headers
+            }
+        );
+
+
+    if (
+        response.status ===
+        401
+    ) {
+
+        sessionStorage.removeItem(
+            "kulzzy_session"
+        );
+
+        sessionToken = null;
+
+        showLogin();
+
+        throw new Error(
+            "Your session has expired."
+        );
+
+    }
+
+
+    return response;
+
+}
+
+
+async function loadServerStatus() {
+
+    try {
+
+        const response =
+            await apiRequest(
+                "/api/status"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Unable to load server."
+            );
+
+        }
+
+
+        updateDashboard(
+            data
+        );
+
+    }
+
+    catch (error) {
+
+        document.getElementById(
+            "serverStatus"
+        ).textContent =
+            "OFFLINE";
+
+        console.error(error);
+
+    }
+
+}
+
+
+function updateDashboard(
+    data
+) {
+
+    const server =
+        data.server;
+
+    const hardware =
+        data.hardware;
+
+
+    document.getElementById(
+        "serverName"
+    ).textContent =
+        server.name;
+
+
+    document.getElementById(
+        "serverStatus"
+    ).textContent =
+        server.status.toUpperCase();
+
+
+    document.getElementById(
+        "cpuUsage"
+    ).textContent =
+        hardware.cpu.usage_percent +
+        "%";
+
+
+    document.getElementById(
+        "cpuCores"
+    ).textContent =
+        hardware.cpu.cores;
+
+
+    document.getElementById(
+        "memoryUsage"
+    ).textContent =
+        hardware.memory.usage_percent +
+        "%";
+
+
+    document.getElementById(
+        "storageUsage"
+    ).textContent =
+        hardware.storage.usage_percent +
+        "%";
+
+
+    document.getElementById(
+        "hostname"
+    ).textContent =
+        server.hostname ||
+        "Unknown";
+
+
+    document.getElementById(
+        "operatingSystem"
+    ).textContent =
+        server.os;
+
+
+    document.getElementById(
+        "uptime"
+    ).textContent =
+        server.uptime;
+
+
+    renderServices(
+        data.services
+    );
+
+}
+
+
+function renderServices(
+    services
+) {
+
+    const container =
+        document.getElementById(
+            "services"
+        );
+
+
+    container.innerHTML = "";
+
+
+    Object.entries(
+        services
+    ).forEach(
+        ([name, status]) => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "service";
+
+
+            const label =
+                document.createElement(
+                    "span"
+                );
+
+
+            label.textContent =
+                name
+                    .replaceAll(
+                        "_",
+                        " "
+                    )
+                    .replace(
+                        /\b\w/g,
+                        letter =>
+                            letter.toUpperCase()
+                    );
+
+
+            const state =
+                document.createElement(
+                    "span"
+                );
+
+
+            state.className =
+                "service-status";
+
+
+            state.textContent =
+                status;
+
+
+            item.appendChild(
+                label
+            );
+
+            item.appendChild(
+                state
+            );
+
+
+            container.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+async function logout() {
+
+    try {
+
+        await apiRequest(
+            "/api/auth/logout",
+            {
+                method: "POST"
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+    }
+
+
+    sessionStorage.removeItem(
+        "kulzzy_session"
+    );
+
+
+    sessionToken = null;
+
+    showLogin();
+
+}
+
+
+loginForm.addEventListener(
+    "submit",
+    event => {
+
+        event.preventDefault();
+
+        const username =
+            document.getElementById(
+                "username"
+            ).value.trim();
+
+        const password =
+            document.getElementById(
+                "password"
+            ).value;
+
+
+        login(
+            username,
+            password
+        );
+
+    }
+);
+
+
+logoutButton.addEventListener(
+    "click",
+    logout
+);
+
+
+/*
+    Attempt to restore an existing
+    browser session.
+*/
+
+async function restoreSession() {
+
+    if (!sessionToken) {
+
+        showLogin();
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await apiRequest(
+                "/api/auth/me"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Session invalid."
+            );
+
+        }
+
+
+        document.getElementById(
+            "loggedUser"
+        ).textContent =
+            "Administrator: " +
+            data.admin.username;
+
+
+        showDashboard();
+
+        loadServerStatus();
+
+    }
+
+    catch (error) {
+
+        sessionStorage.removeItem(
+            "kulzzy_session"
+        );
+
+        sessionToken = null;
+
+        showLogin();
+
+    }
+
+}
+
+
+restoreSession();
+
+
+/*
+    Refresh server information
+    every 10 seconds.
+*/
+
+setInterval(
+    () => {
+
+        if (
+            sessionToken &&
+            !dashboard.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            loadServerStatus();
+
+        }
+
+    },
+    10000
+);
+
+</script>
+
+</body>
+</html>
