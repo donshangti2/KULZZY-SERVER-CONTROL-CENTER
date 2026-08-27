@@ -1114,19 +1114,93 @@ target.classList.add("active");
 });
 
 
-function refreshServer(){
+async function loadServerStatus() {
 
-const cpu =
-Math.floor(Math.random() * 40) + 20;
+    try {
 
-document.getElementById("cpu")
-.textContent = cpu + "%";
+        const response =
+            await fetch("api/server-status.json", {
+                cache: "no-store"
+            });
 
-document.getElementById("cpuBar")
-.style.width = cpu + "%";
+        if (!response.ok) {
+            throw new Error("Server status unavailable");
+        }
+
+        const data = await response.json();
+
+        /* CPU */
+
+        const cpu =
+            data.hardware.cpu.usage_percent;
+
+        document.getElementById("cpu")
+            .textContent = cpu + "%";
+
+        document.getElementById("cpuBar")
+            .style.width = cpu + "%";
+
+
+        /* SERVER STATUS */
+
+        const status =
+            data.server.status;
+
+        const statusDot =
+            document.querySelector(".status-dot");
+
+        const statusText =
+            document.querySelector(".server-status");
+
+        if (status === "online") {
+
+            statusDot.style.background = "#22c55e";
+
+            statusText.innerHTML =
+                '<div class="status-dot"></div> Server Online';
+
+        } else {
+
+            statusDot.style.background = "#d64545";
+
+            statusText.innerHTML =
+                '<div class="status-dot"></div> Server Offline';
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Kulzzy Server API:",
+            error
+        );
+
+    }
 
 }
 
+
+/* Load when dashboard opens */
+
+loadServerStatus();
+
+
+/* Refresh every 30 seconds */
+
+setInterval(
+    loadServerStatus,
+    30000
+);
+
+
+/* Manual refresh button */
+
+function refreshServer() {
+
+    loadServerStatus();
+}
 </script>
 
 </body>
