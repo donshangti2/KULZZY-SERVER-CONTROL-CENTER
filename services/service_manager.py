@@ -13,6 +13,14 @@ SERVICES = {
 }
 
 
+ALLOWED_OPERATIONS = {
+    "start",
+    "stop",
+    "restart",
+    "logs"
+}
+
+
 def run_command(command):
 
     try:
@@ -35,6 +43,14 @@ def run_command(command):
                 result.stderr.strip()
         }
 
+    except subprocess.TimeoutExpired:
+
+        return {
+            "success": False,
+            "output": "",
+            "error": "Command timed out"
+        }
+
     except Exception as error:
 
         return {
@@ -44,16 +60,30 @@ def run_command(command):
         }
 
 
+def validate_service(service):
+
+    return service in SERVICES
+
+
+def get_container(service):
+
+    if not validate_service(service):
+
+        return None
+
+    return SERVICES[service]
+
+
 def service_status(service):
 
-    if service not in SERVICES:
+    container = get_container(service)
+
+    if not container:
 
         return {
             "success": False,
             "error": "Unknown service"
         }
-
-    container = SERVICES[service]
 
     result = run_command([
         "docker",
@@ -66,12 +96,14 @@ def service_status(service):
     if not result["success"]:
 
         return {
+            "success": True,
             "service": service,
             "container": container,
             "status": "not_found"
         }
 
     return {
+        "success": True,
         "service": service,
         "container": container,
         "status": result["output"]
@@ -80,63 +112,44 @@ def service_status(service):
 
 def all_services():
 
-    result = {}
+    services = {}
 
     for service in SERVICES:
 
-        result[service] = service_status(
-            service
-        )
+        services[service] = \
+            service_status(service)
 
-    return result
-
-
-def start_service(service):
-
-    if service not in SERVICES:
-
-        return {
-            "success": False,
-            "error": "Unknown service"
-        }
-
-    return run_command([
-        "docker",
-        "start",
-        SERVICES[service]
-    ])
+    return services
 
 
-def stop_service(service):
+def perform_operation(
+    service,
+    operation
+):
 
-    if service not in SERVICES:
+    if not validate_service(service):
 
         return {
             "success": False,
             "error": "Unknown service"
         }
 
-    return run_command([
-        "docker",
-        "stop",
-        SERVICES[service]
-    ])
-
-
-def restart_service(service):
-
-    if service not in SERVICES:
+    if operation not in ALLOWED_OPERATIONS:
 
         return {
             "success": False,
-            "error": "Unknown service"
+            "error": "Operation not permitted"
         }
 
-    return run_command([
+    container = SERVICES[service]
+
+    command = [
         "docker",
-        "restart",
-        SERVICES[service]
-    ])
+        operation,
+        container
+    ]
+
+    return run_command(command)
 
 
 def service_logs(
@@ -144,19 +157,34 @@ def service_logs(
     lines=100
 ):
 
-    if service not in SERVICES:
+    if not validate_service(service):
 
         return {
             "success": False,
             "error": "Unknown service"
         }
 
+    try:
+
+        lines = int(lines)
+
+    except Exception:
+
+        lines = 100
+
+    lines = max(
+        1,
+        min(lines, 500)
+    )
+
+    container = SERVICES[service]
+
     return run_command([
         "docker",
         "logs",
         "--tail",
         str(lines),
-        SERVICES[service]
+        container
     ])
 
 
@@ -182,4 +210,4 @@ if __name__ == "__main__":
             service_summary(),
             indent=2
         )
-  )
+    )
