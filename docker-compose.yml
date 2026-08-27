@@ -1,0 +1,18 @@
+services:
+
+  kulzzy-server-api:
+
+    container_name: kulzzy-server-api
+
+    build: .
+
+    restart: unless-stopped
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      TZ: Africa/Lagos
+
+    volumes:
+      - /:/host:ro
