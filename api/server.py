@@ -30,6 +30,12 @@ from services.service_manager import (
     service_logs
 )
 
+from deployment import (
+    deploy,
+    rollback,
+    health_check
+)
+
 
 # =====================================================
 # KULZZY SERVER API
@@ -99,7 +105,10 @@ def require_auth(function):
 
         request.kulzzy_admin = session
 
-        return function(*args, **kwargs)
+        return function(
+            *args,
+            **kwargs
+        )
 
     return protected
 
@@ -123,7 +132,10 @@ def require_owner(function):
                 "error": "Owner permission required"
             }), 403
 
-        return function(*args, **kwargs)
+        return function(
+            *args,
+            **kwargs
+        )
 
     return protected
 
@@ -143,12 +155,13 @@ def safe_area(area):
         area
     ).resolve()
 
-    storage_root_string = str(
-        STORAGE_ROOT
-    ) + os.sep
+    root_string = (
+        str(STORAGE_ROOT) +
+        os.sep
+    )
 
     if not str(path).startswith(
-        storage_root_string
+        root_string
     ):
 
         return None
@@ -166,7 +179,9 @@ def safe_file(
     filename
 ):
 
-    root = safe_area(area)
+    root = safe_area(
+        area
+    )
 
     if root is None:
 
@@ -185,7 +200,10 @@ def safe_file(
         filename
     ).resolve()
 
-    root_string = str(root) + os.sep
+    root_string = (
+        str(root) +
+        os.sep
+    )
 
     if not str(path).startswith(
         root_string
@@ -197,7 +215,7 @@ def safe_file(
 
 
 # =====================================================
-# SERVER CPU
+# CPU
 # =====================================================
 
 def get_cpu_usage():
@@ -219,7 +237,7 @@ def get_cpu_usage():
 
 
 # =====================================================
-# SERVER MEMORY
+# MEMORY
 # =====================================================
 
 def get_memory():
@@ -228,9 +246,12 @@ def get_memory():
 
         import psutil
 
-        memory = psutil.virtual_memory()
+        memory = (
+            psutil.virtual_memory()
+        )
 
         return {
+
             "total_gb":
                 round(
                     memory.total /
@@ -250,19 +271,24 @@ def get_memory():
                     memory.percent,
                     1
                 )
+
         }
 
     except Exception:
 
         return {
+
             "total_gb": 0,
+
             "used_gb": 0,
+
             "usage_percent": 0
+
         }
 
 
 # =====================================================
-# SERVER STORAGE
+# STORAGE
 # =====================================================
 
 def get_storage():
@@ -290,6 +316,7 @@ def get_storage():
         )
 
         return {
+
             "total_tb":
                 round(
                     total_tb,
@@ -307,19 +334,24 @@ def get_storage():
                     usage_percent,
                     1
                 )
+
         }
 
     except Exception:
 
         return {
+
             "total_tb": 0,
+
             "used_tb": 0,
+
             "usage_percent": 0
+
         }
 
 
 # =====================================================
-# SERVER UPTIME
+# UPTIME
 # =====================================================
 
 def get_uptime():
@@ -357,7 +389,7 @@ def get_uptime():
 
 
 # =====================================================
-# ROOT HEALTH CHECK
+# HOME
 # =====================================================
 
 @app.route(
@@ -378,7 +410,7 @@ def home():
             "online",
 
         "version":
-            "3.0.0"
+            "4.0.0"
 
     })
 
@@ -467,7 +499,9 @@ def logout():
 
     token = authorization[7:].strip()
 
-    revoke_session(token)
+    revoke_session(
+        token
+    )
 
     return jsonify({
 
@@ -542,7 +576,7 @@ def server_status():
                 "production",
 
             "version":
-                "3.0.0",
+                "4.0.0",
 
             "hostname":
                 platform.node(),
@@ -578,25 +612,6 @@ def server_status():
 
             "storage":
                 storage
-
-        },
-
-        "services": {
-
-            "web_server":
-                "online",
-
-            "database":
-                "online",
-
-            "storage":
-                "online",
-
-            "code_hub":
-                "online",
-
-            "radio_stream":
-                "online"
 
         }
 
@@ -835,6 +850,78 @@ def logs(
             )
 
     })
+
+
+# =====================================================
+# DEPLOYMENT
+# =====================================================
+
+@app.route(
+    "/api/deploy",
+    methods=["POST"]
+)
+@require_owner
+def deploy_server():
+
+    result = deploy()
+
+    status_code = (
+        200
+        if result.get("success")
+        else 500
+    )
+
+    return jsonify(
+        result
+    ), status_code
+
+
+# =====================================================
+# ROLLBACK
+# =====================================================
+
+@app.route(
+    "/api/rollback",
+    methods=["POST"]
+)
+@require_owner
+def rollback_server():
+
+    result = rollback()
+
+    status_code = (
+        200
+        if result.get("success")
+        else 500
+    )
+
+    return jsonify(
+        result
+    ), status_code
+
+
+# =====================================================
+# HEALTH CHECK
+# =====================================================
+
+@app.route(
+    "/api/health-check",
+    methods=["GET"]
+)
+@require_auth
+def server_health_check():
+
+    result = health_check()
+
+    status_code = (
+        200
+        if result.get("success")
+        else 500
+    )
+
+    return jsonify(
+        result
+    ), status_code
 
 
 # =====================================================
@@ -1163,7 +1250,7 @@ def file_too_large(error):
 
 
 # =====================================================
-# GENERAL ERROR HANDLER
+# GENERAL ERROR
 # =====================================================
 
 @app.errorhandler(
@@ -1204,11 +1291,11 @@ if __name__ == "__main__":
     )
 
     print(
-        " KULZZY SERVER API"
+        "       KULZZY SERVER API"
     )
 
     print(
-        " Version 3.0.0"
+        "       VERSION 4.0.0"
     )
 
     print(
@@ -1231,4 +1318,4 @@ if __name__ == "__main__":
 
         debug=False
 
-)
+    )
