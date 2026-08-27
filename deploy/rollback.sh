@@ -2,67 +2,31 @@
 
 set -e
 
-PROJECT_DIR="/opt/kulzzy/server-control-center"
-BACKUP_DIR="/srv/kulzzy/backups/deployments"
-
 echo "========================================"
-echo " KULZZY DEPLOYMENT ROLLBACK"
+echo "          KULZZY ROLLBACK"
 echo "========================================"
-echo ""
 
-LATEST_BACKUP=$(find "$BACKUP_DIR" \
-    -mindepth 1 \
-    -maxdepth 1 \
-    -type d \
-    | sort \
-    | tail -n 1)
+PROJECT="/srv/kulzzy"
 
-if [ -z "$LATEST_BACKUP" ]; then
+cd "$PROJECT"
 
-    echo "No deployment backup found."
+echo "[1/4] Finding previous version..."
 
-    exit 1
+git checkout HEAD~1
 
-fi
-
-echo "Using backup:"
-echo "$LATEST_BACKUP"
-echo ""
-
-cd "$PROJECT_DIR"
-
-echo "Stopping current service..."
-
-docker compose down
-
-echo "Restoring backup..."
-
-cp -r \
-    "$LATEST_BACKUP/api" \
-    .
-
-cp \
-    "$LATEST_BACKUP/Dockerfile" \
-    .
-
-cp \
-    "$LATEST_BACKUP/docker-compose.yml" \
-    .
-
-cp \
-    "$LATEST_BACKUP/requirements.txt" \
-    .
-
-echo "Rebuilding..."
+echo "[2/4] Rebuilding services..."
 
 docker compose build
 
-echo "Starting previous version..."
+echo "[3/4] Restarting services..."
 
 docker compose up -d
 
-echo ""
-
-echo "ROLLBACK COMPLETE"
+echo "[4/4] Checking services..."
 
 docker compose ps
+
+echo ""
+echo "========================================"
+echo "          ROLLBACK COMPLETE"
+echo "========================================"
