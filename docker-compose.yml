@@ -17,18 +17,8 @@ services:
 
       KULZZY_STORAGE_ROOT: /kulzzy
 
-      KULZZY_API_KEY: ${KULZZY_API_KEY}
+      KULZZY_AUTH_DB: /kulzzy/auth/kulzzy_auth.db
 
     volumes:
 
-      - /srv/kulzzy/audio:/kulzzy/audio
-
-      - /srv/kulzzy/celebrants:/kulzzy/celebrants
-
-      - /srv/kulzzy/websites:/kulzzy/websites
-
-      - /srv/kulzzy/repositories:/kulzzy/repositories
-
-      - /srv/kulzzy/uploads:/kulzzy/uploads
-
-      - /srv/kulzzy/backups:/kulzzy/backups
+      - /srv/kulzzy:/kulzzy
