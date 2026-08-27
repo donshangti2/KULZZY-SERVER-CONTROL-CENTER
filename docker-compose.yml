@@ -12,7 +12,12 @@ services:
       - "5000:5000"
 
     environment:
+
       TZ: Africa/Lagos
+
+      KULZZY_STORAGE_ROOT: /kulzzy
+
+      KULZZY_API_KEY: ${KULZZY_API_KEY}
 
     volumes:
 
