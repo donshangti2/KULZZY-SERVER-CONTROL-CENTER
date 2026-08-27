@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+
+# =====================================================
+# KULZZY SERVER CONTROL CENTER API
+# VERSION 6.0.0
+# =====================================================
+
+import os
+import sys
+import time
+import uuid
+import shutil
+import platform
+
+from pathlib import Path
+from functools import wraps
+
 from flask import (
     Flask,
     jsonify,
@@ -5,15 +22,59 @@ from flask import (
     send_file
 )
 
-from functools import wraps
-from pathlib import Path
 
-import os
-import platform
-import shutil
-import time
-import uuid
+# =====================================================
+# KULZZY PATHS
+# =====================================================
 
+BASE_DIR = Path(
+    "/srv/kulzzy"
+).resolve()
+
+
+API_DIR = (
+    BASE_DIR /
+    "api"
+)
+
+
+DNS_DIR = (
+    BASE_DIR /
+    "dns"
+)
+
+
+STORAGE_ROOT = Path(
+    os.environ.get(
+        "KULZZY_STORAGE_ROOT",
+        "/kulzzy"
+    )
+).resolve()
+
+
+# =====================================================
+# PYTHON MODULE PATHS
+# =====================================================
+
+if str(API_DIR) not in sys.path:
+
+    sys.path.insert(
+        0,
+        str(API_DIR)
+    )
+
+
+if str(DNS_DIR) not in sys.path:
+
+    sys.path.insert(
+        0,
+        str(DNS_DIR)
+    )
+
+
+# =====================================================
+# AUTHENTICATION
+# =====================================================
 
 from auth import (
     ensure_database,
@@ -24,6 +85,10 @@ from auth import (
 )
 
 
+# =====================================================
+# SERVICE MANAGER
+# =====================================================
+
 from services.service_manager import (
     service_status,
     all_services,
@@ -32,12 +97,20 @@ from services.service_manager import (
 )
 
 
+# =====================================================
+# DEPLOYMENT
+# =====================================================
+
 from deployment import (
     deploy,
     rollback,
     health_check
 )
 
+
+# =====================================================
+# DOMAIN MANAGER
+# =====================================================
 
 from domain_manager import (
     get_all_domains,
@@ -48,22 +121,32 @@ from domain_manager import (
 
 
 # =====================================================
-# KULZZY SERVER API
-# VERSION 5.0.0
+# DNS MANAGER
 # =====================================================
 
-app = Flask(__name__)
+from dns_manager import (
+    dns_status,
+    get_records,
+    configuration,
+    set_server_ip
+)
+
+
+# =====================================================
+# FLASK APPLICATION
+# =====================================================
+
+app = Flask(
+    __name__
+)
+
 
 START_TIME = time.time()
 
 
-STORAGE_ROOT = Path(
-    os.environ.get(
-        "KULZZY_STORAGE_ROOT",
-        "/kulzzy"
-    )
-).resolve()
-
+# =====================================================
+# APPLICATION SETTINGS
+# =====================================================
 
 MAX_UPLOAD_SIZE = (
     500 *
@@ -76,6 +159,10 @@ app.config[
     "MAX_CONTENT_LENGTH"
 ] = MAX_UPLOAD_SIZE
 
+
+# =====================================================
+# STORAGE AREAS
+# =====================================================
 
 ALLOWED_AREAS = {
 
@@ -135,6 +222,19 @@ def require_auth(function):
         )
 
 
+        if not token:
+
+            return jsonify({
+
+                "success":
+                    False,
+
+                "error":
+                    "Authentication token is missing"
+
+            }), 401
+
+
         session = get_session(
             token
         )
@@ -180,9 +280,14 @@ def require_owner(function):
         **kwargs
     ):
 
-        if request.kulzzy_admin.get(
-            "role"
-        ) != "owner":
+        role = (
+            request.kulzzy_admin.get(
+                "role"
+            )
+        )
+
+
+        if role != "owner":
 
             return jsonify({
 
@@ -248,6 +353,10 @@ def safe_area(
     return path
 
 
+# =====================================================
+# SAFE FILE
+# =====================================================
+
 def safe_file(
     area,
     filename
@@ -299,7 +408,7 @@ def safe_file(
 
 
 # =====================================================
-# CPU
+# CPU INFORMATION
 # =====================================================
 
 def get_cpu_usage():
@@ -321,7 +430,7 @@ def get_cpu_usage():
 
 
 # =====================================================
-# MEMORY
+# MEMORY INFORMATION
 # =====================================================
 
 def get_memory():
@@ -351,6 +460,13 @@ def get_memory():
                     2
                 ),
 
+            "available_gb":
+                round(
+                    memory.available /
+                    (1024 ** 3),
+                    2
+                ),
+
             "usage_percent":
                 round(
                     memory.percent,
@@ -370,6 +486,9 @@ def get_memory():
             "used_gb":
                 0,
 
+            "available_gb":
+                0,
+
             "usage_percent":
                 0
 
@@ -377,12 +496,18 @@ def get_memory():
 
 
 # =====================================================
-# STORAGE
+# STORAGE INFORMATION
 # =====================================================
 
 def get_storage():
 
     try:
+
+        STORAGE_ROOT.mkdir(
+            parents=True,
+            exist_ok=True
+        )
+
 
         disk = shutil.disk_usage(
             STORAGE_ROOT
@@ -397,6 +522,12 @@ def get_storage():
 
         used_tb = (
             disk.used /
+            (1024 ** 4)
+        )
+
+
+        free_tb = (
+            disk.free /
             (1024 ** 4)
         )
 
@@ -422,6 +553,12 @@ def get_storage():
                     2
                 ),
 
+            "free_tb":
+                round(
+                    free_tb,
+                    2
+                ),
+
             "usage_percent":
                 round(
                     usage_percent,
@@ -439,6 +576,9 @@ def get_storage():
                 0,
 
             "used_tb":
+                0,
+
+            "free_tb":
                 0,
 
             "usage_percent":
@@ -492,7 +632,7 @@ def get_uptime():
 
 
 # =====================================================
-# HOME
+# ROOT
 # =====================================================
 
 @app.route(
@@ -503,8 +643,11 @@ def home():
 
     return jsonify({
 
+        "success":
+            True,
+
         "name":
-            "Kulzzy Server API",
+            "Kulzzy Server Control Center",
 
         "server":
             "kulzzy-server-01",
@@ -513,7 +656,59 @@ def home():
             "online",
 
         "version":
-            "5.0.0"
+            "6.0.0",
+
+        "message":
+            "Kulzzy infrastructure API is running."
+
+    })
+
+
+# =====================================================
+# API INFORMATION
+# =====================================================
+
+@app.route(
+    "/api",
+    methods=["GET"]
+)
+def api_information():
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "name":
+            "Kulzzy Server API",
+
+        "version":
+            "6.0.0",
+
+        "status":
+            "online",
+
+        "services": [
+
+            "authentication",
+
+            "server-control",
+
+            "services",
+
+            "deployment",
+
+            "rollback",
+
+            "health-check",
+
+            "domains",
+
+            "dns",
+
+            "storage"
+
+        ]
 
     })
 
@@ -704,13 +899,19 @@ def server_status():
                 "production",
 
             "version":
-                "5.0.0",
+                "6.0.0",
 
             "hostname":
                 platform.node(),
 
             "os":
                 platform.system(),
+
+            "os_version":
+                platform.version(),
+
+            "architecture":
+                platform.machine(),
 
             "uptime":
                 get_uptime()
@@ -736,10 +937,8 @@ def server_status():
 
             },
 
-
             "memory":
                 memory,
-
 
             "storage":
                 storage
@@ -772,7 +971,7 @@ def services_status():
 
 
 # =====================================================
-# SINGLE SERVICE
+# SINGLE SERVICE STATUS
 # =====================================================
 
 @app.route(
@@ -1097,7 +1296,7 @@ def server_health_check():
 
 
 # =====================================================
-# DOMAIN — ALL
+# DOMAINS — ALL
 # =====================================================
 
 @app.route(
@@ -1126,7 +1325,7 @@ def domains():
 
 
 # =====================================================
-# DOMAIN — ENABLED
+# DOMAINS — ENABLED
 # =====================================================
 
 @app.route(
@@ -1217,7 +1416,174 @@ def domain_health_status():
 
 
 # =====================================================
-# LIST FILES
+# DNS STATUS
+# =====================================================
+
+@app.route(
+    "/api/dns/status",
+    methods=["GET"]
+)
+@require_auth
+def dns_status_api():
+
+    result = dns_status()
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 500
+
+
+    return jsonify(
+        result
+    )
+
+
+# =====================================================
+# DNS RECORDS
+# =====================================================
+
+@app.route(
+    "/api/dns/records",
+    methods=["GET"]
+)
+@require_auth
+def dns_records_api():
+
+    result = get_records()
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 500
+
+
+    return jsonify(
+        result
+    )
+
+
+# =====================================================
+# DNS CONFIGURATION
+# =====================================================
+
+@app.route(
+    "/api/dns/configuration",
+    methods=["GET"]
+)
+@require_auth
+def dns_configuration_api():
+
+    result = configuration()
+
+
+    return jsonify(
+        result
+    )
+
+# =====================================================
+# SET PUBLIC IP
+# =====================================================
+
+@app.route(
+    "/api/dns/public-ip",
+    methods=["POST"]
+)
+@require_owner
+def set_public_ip():
+
+    data = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    public_ip = str(
+        data.get(
+            "ip",
+            ""
+        )
+    ).strip()
+
+
+    if not public_ip:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Public IP is required."
+
+        }), 400
+
+
+    result = set_server_ip(
+        public_ip
+    )
+
+
+    if not result.get(
+        "success",
+        False
+    ):
+
+        return jsonify(
+            result
+        ), 400
+
+
+    return jsonify(
+        result
+    )
+
+
+# =====================================================
+# DNS CONFIGURATION RELOAD
+# =====================================================
+
+@app.route(
+    "/api/dns/reload",
+    methods=["POST"]
+)
+@require_owner
+def dns_reload():
+
+    result = dns_status()
+
+
+    return jsonify({
+
+        "success":
+            result.get(
+                "success",
+                False
+            ),
+
+        "message":
+            "Kulzzy DNS configuration reloaded.",
+
+        "dns":
+            result
+
+    })
+
+
+# =====================================================
+# STORAGE — LIST FILES
 # =====================================================
 
 @app.route(
@@ -1256,16 +1622,19 @@ def list_files(
 
             if item.is_file():
 
+                stat = item.stat()
+
+
                 files.append({
 
                     "name":
                         item.name,
 
                     "size":
-                        item.stat().st_size,
+                        stat.st_size,
 
                     "modified":
-                        item.stat().st_mtime
+                        stat.st_mtime
 
                 })
 
@@ -1301,7 +1670,7 @@ def list_files(
 
 
 # =====================================================
-# DOWNLOAD FILE
+# STORAGE — DOWNLOAD
 # =====================================================
 
 @app.route(
@@ -1353,7 +1722,7 @@ def download_file(
 
 
 # =====================================================
-# UPLOAD FILE
+# STORAGE — UPLOAD
 # =====================================================
 
 @app.route(
@@ -1466,7 +1835,7 @@ def upload_file(
             True,
 
         "message":
-            "File uploaded",
+            "File uploaded successfully.",
 
         "original_name":
             original_name,
@@ -1484,7 +1853,7 @@ def upload_file(
 
 
 # =====================================================
-# DELETE FILE
+# STORAGE — DELETE
 # =====================================================
 
 @app.route(
@@ -1553,10 +1922,86 @@ def delete_file(
             True,
 
         "message":
-            "File deleted",
+            "File deleted successfully.",
 
         "file":
             filename
+
+    })
+
+
+# =====================================================
+# STORAGE STATUS
+# =====================================================
+
+@app.route(
+    "/api/storage/status",
+    methods=["GET"]
+)
+@require_auth
+def storage_status():
+
+    storage = get_storage()
+
+
+    areas = {}
+
+
+    for area in ALLOWED_AREAS:
+
+        root = safe_area(
+            area
+        )
+
+
+        if root is None:
+
+            continue
+
+
+        try:
+
+            count = sum(
+
+                1
+
+                for item in root.iterdir()
+
+                if item.is_file()
+
+            )
+
+        except Exception:
+
+            count = 0
+
+
+        areas[
+            area
+        ] = {
+
+            "path":
+                str(root),
+
+            "files":
+                count
+
+        }
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "root":
+            str(STORAGE_ROOT),
+
+        "disk":
+            storage,
+
+        "areas":
+            areas
 
     })
 
@@ -1600,18 +2045,43 @@ def internal_error(
             False,
 
         "error":
-            "Internal server error"
+            "Internal server error."
 
     }), 500
 
 
 # =====================================================
-# START SERVER
+# 404
 # =====================================================
 
-if __name__ == "__main__":
+@app.errorhandler(
+    404
+)
+def not_found(
+    error
+):
 
-    ensure_database()
+    return jsonify({
+
+        "success":
+            False,
+
+        "error":
+            "Endpoint not found."
+
+    }), 404
+
+
+# =====================================================
+# INITIALIZE STORAGE
+# =====================================================
+
+def initialize_storage():
+
+    STORAGE_ROOT.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
 
     for area in ALLOWED_AREAS:
@@ -1625,24 +2095,36 @@ if __name__ == "__main__":
         )
 
 
-    print(
-        "========================================"
-    )
+# =====================================================
+# START SERVER
+# =====================================================
+
+if __name__ == "__main__":
+
+    print("")
+    print("==============================================")
+    print("       KULZZY SERVER CONTROL CENTER")
+    print("       VERSION 6.0.0")
+    print("==============================================")
+    print("")
 
 
-    print(
-        "       KULZZY SERVER API"
-    )
+    try:
+
+        ensure_database()
+
+    except Exception as error:
+
+        print(
+            "Database initialization warning:"
+        )
+
+        print(
+            str(error)
+        )
 
 
-    print(
-        "       VERSION 5.0.0"
-    )
-
-
-    print(
-        "========================================"
-    )
+    initialize_storage()
 
 
     print(
@@ -1651,7 +2133,17 @@ if __name__ == "__main__":
 
 
     print(
-        "API: http://0.0.0.0:5000"
+        f"API: http://0.0.0.0:5000"
+    )
+
+
+    print(
+        f"DNS directory: {DNS_DIR}"
+    )
+
+
+    print(
+        "=============================================="
     )
 
 
