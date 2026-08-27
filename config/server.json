@@ -1,0 +1,34 @@
+{
+  "name": "Kulzzy Server #01",
+  "server_id": "kulzzy-server-01",
+  "environment": "production",
+
+  "api": {
+    "port": 5000,
+    "protocol": "http"
+  },
+
+  "storage": {
+    "root": "/kulzzy",
+
+    "areas": [
+      "audio",
+      "celebrants",
+      "websites",
+      "repositories",
+      "uploads",
+      "backups"
+    ]
+  },
+
+  "services": {
+    "docker": true,
+    "deployment": true,
+    "rollback": true,
+    "health_check": true
+  },
+
+  "limits": {
+    "max_upload_mb": 500
+  }
+}
