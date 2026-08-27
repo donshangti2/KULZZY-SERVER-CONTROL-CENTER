@@ -1,0 +1,35 @@
+{
+  "server": {
+    "id": "kulzzy-server-01",
+    "name": "Kulzzy Server #01",
+    "status": "online",
+    "environment": "development",
+    "version": "1.0.0"
+  },
+  "hardware": {
+    "cpu": {
+      "model": "Intel Xeon E-2336",
+      "cores": 6,
+      "threads": 12,
+      "usage_percent": 32
+    },
+    "memory": {
+      "total_gb": 32,
+      "used_gb": 24,
+      "usage_percent": 75
+    },
+    "storage": {
+      "total_tb": 4,
+      "used_tb": 1.8,
+      "usage_percent": 45
+    }
+  },
+  "services": {
+    "web_server": "online",
+    "database": "online",
+    "storage": "online",
+    "code_hub": "online",
+    "radio_stream": "online"
+  },
+  "updated_at": "development"
+}
