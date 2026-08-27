@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kulzzy Server Control Center</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6fa;
+    color: #13233d;
+}
+
+/* HEADER */
+.header {
+    height: 64px;
+    background: #07152f;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.logo span {
+    color: #f5c542;
+}
+
+.server-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+/* LAYOUT */
+.layout {
+    display: flex;
+    min-height: calc(100vh - 64px);
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 245px;
+    background: #0d2145;
+    color: white;
+    padding: 15px 10px;
+}
+
+.nav-item {
+    padding: 12px;
+    margin-bottom: 5px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 14px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: #193a69;
+}
+
+/* MAIN */
+.main {
+    flex: 1;
+    padding: 20px;
+    max-width: 1400px;
+    margin: auto;
+    width: 100%;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.subtitle {
+    color: #718096;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+/* BUTTON */
+button {
+    border: 0;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.primary {
+    background: #07152f;
+    color: white;
+}
+
+.gold {
+    background: #f5c542;
+    color: #111;
+}
+
+/* METRICS */
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e3e8ef;
+    border-radius: 14px;
+    padding: 17px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.04);
+}
+
+.metric-label {
+    color: #718096;
+    font-size: 13px;
+}
+
+.metric-value {
+    font-size: 27px;
+    font-weight: 800;
+    margin: 9px 0;
+}
+
+.progress {
+    height: 8px;
+    background: #e8edf4;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 32%;
+    background: #f5c542;
+}
+
+/* PANELS */
+.panel {
+    margin-top: 16px;
+}
+
+.panel-title {
+    font-size: 17px;
+    margin-bottom: 12px;
+}
+
+/* ROW */
+.service-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px;
+    border: 1px solid #e5eaf1;
+    border-radius: 10px;
+    margin-bottom: 9px;
+}
+
+.service-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.service-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    background: #eef3fa;
+    border-radius: 9px;
+}
+
+.badge {
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    background: #eaf8f1;
+    color: #16804c;
+}
+
+/* TABLE */
+.table-card {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 13px;
+    border-bottom: 1px solid #e5eaf1;
+    font-size: 13px;
+}
+
+th {
+    background: #f8fafc;
+}
+
+/* MOBILE */
+@media(max-width:900px) {
+
+    .sidebar {
+        width: 70px;
+    }
+
+    .nav-item span {
+        display: none;
+    }
+
+    .metrics {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+@media(max-width:560px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        padding: 13px;
+    }
+
+    .metrics {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .metric-value {
+        font-size: 21px;
+    }
+
+    .page-header h1 {
+        font-size: 20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <div class="logo">
+        KULZZY <span>SERVER CONTROL</span>
+    </div>
+
+    <div class="server-status">
+        <div class="status-dot"></div>
+        Server Online
+    </div>
+
+</header>
+
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="nav-item active" data-page="dashboard">
+        📊 <span>Dashboard</span>
+    </div>
+
+    <div class="nav-item" data-page="websites">
+        🌐 <span>Websites</span>
+    </div>
+
+    <div class="nav-item" data-page="storage">
+        🎵 <span>Audio & Storage</span>
+    </div>
+
+    <div class="nav-item" data-page="database">
+        🗄️ <span>Database</span>
+    </div>
+
+    <div class="nav-item" data-page="code">
+        💻 <span>Code Hub</span>
+    </div>
+
+    <div class="nav-item" data-page="radio">
+        📡 <span>Radio</span>
+    </div>
+
+    <div class="nav-item" data-page="users">
+        👥 <span>Users</span>
+    </div>
+
+    <div class="nav-item" data-page="security">
+        🔐 <span>Security</span>
+    </div>
+
+    <div class="nav-item" data-page="backups">
+        💾 <span>Backups</span>
+    </div>
+
+</aside>
+
+
+<main class="main">
+
+
+<!-- DASHBOARD -->
+
+<section id="dashboard" class="page active">
+
+<div class="page-header">
+
+<div>
+<h1>Kulzzy Server Control Center</h1>
+
+<div class="subtitle">
+Kulzzy Infrastructure v1.0
+</div>
+
+</div>
+
+<button class="gold" onclick="refreshServer()">
+↻ Refresh
+</button>
+
+</div>
+
+
+<div class="metrics">
+
+<div class="card">
+
+<div class="metric-label">
+CPU Usage
+</div>
+
+<div class="metric-value" id="cpu">
+32%
+</div>
+
+<div class="progress">
+<div class="progress-fill" id="cpuBar"></div>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="metric-label">
+Memory
+</div>
+
+<div class="metric-value">
+24 GB
+</div>
+
+<div class="metric-label">
+of 32 GB
+</div>
+
+<div class="progress">
+<div class="progress-fill" style="width:75%">
+</div>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="metric-label">
+Storage
+</div>
+
+<div class="metric-value">
+1.8 TB
+</div>
+
+<div class="metric-label">
+of 4 TB
+</div>
+
+<div class="progress">
+<div class="progress-fill" style="width:45%">
+</div>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="metric-label">
+Uptime
+</div>
+
+<div class="metric-value">
+12d
+</div>
+
+<div class="metric-label">
+Server #01
+</div>
+
+</div>
+
+</div>
+
+
+<!-- SERVICES -->
+
+<div class="panel card">
+
+<div class="panel-title">
+Services
+</div>
+
+
+<div class="service-row">
+
+<div class="service-left">
+
+<div class="service-icon">🌐</div>
+
+<div>
+<strong>Web Server</strong>
+<br>
+<small>Nginx</small>
+</div>
+
+</div>
+
+<span class="badge">
+ONLINE
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-left">
+
+<div class="service-icon">🗄️</div>
+
+<div>
+<strong>Database</strong>
+<br>
+<small>PostgreSQL</small>
+</div>
+
+</div>
+
+<span class="badge">
+ONLINE
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-left">
+
+<div class="service-icon">🎵</div>
+
+<div>
+<strong>Kulzzy Storage</strong>
+<br>
+<small>Audio & Files</small>
+</div>
+
+</div>
+
+<span class="badge">
+ONLINE
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-left">
+
+<div class="service-icon">💻</div>
+
+<div>
+<strong>Kulzzy Code Hub</strong>
+<br>
+<small>Repositories</small>
+</div>
+
+</div>
+
+<span class="badge">
+ONLINE
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div class="service-left">
+
+<div class="service-icon">📡</div>
+
+<div>
+<strong>Radio Stream</strong>
+<br>
+<small>Kulzzy Radio</small>
+</div>
+
+</div>
+
+<span class="badge">
+ONLINE
+</span>
+
+</div>
+
+</div>
+
+
+<!-- ACTIVITY -->
+
+<div class="panel card">
+
+<div class="panel-title">
+Recent Activity
+</div>
+
+<div class="service-row">
+<span>Control Center initialized</span>
+<small>v1.0</small>
+</div>
+
+<div class="service-row">
+<span>Server API awaiting connection</span>
+<small>Pending</small>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- WEBSITES -->
+
+<section id="websites" class="page">
+
+<div class="page-header">
+
+<div>
+<h1>Websites</h1>
+<div class="subtitle">
+Manage Kulzzy websites.
+</div>
+</div>
+
+<button class="gold">
++ Add Website
+</button>
+
+</div>
+
+
+<div class="card table-card">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Website</th>
+<th>Status</th>
+<th>Server</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>
+www.kulzzyradio.com
+</td>
+
+<td>
+<span class="badge">
+ONLINE
+</span>
+</td>
+
+<td>
+server-01
+</td>
+
+<td>
+<button class="primary">
+Manage
+</button>
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- STORAGE -->
+
+<section id="storage" class="page">
+
+<div class="page-header">
+
+<div>
+<h1>Audio & Storage</h1>
+
+<div class="subtitle">
+Kulzzy-owned storage.
+</div>
+
+</div>
+
+<button class="gold">
++ Upload Audio
+</button>
+
+</div>
+
+
+<div class="card table-card">
+
+<table>
+
+<thead>
+
+<tr>
+<th>File</th>
+<th>Type</th>
+<th>Size</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>
+RADIO HYPE BEAT.mp3
+</td>
+
+<td>
+Audio
+</td>
+
+<td>
+50 MB
+</td>
+
+<td>
+<span class="badge">
+READY
+</span>
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- DATABASE -->
+
+<section id="database" class="page">
+
+<div class="page-header">
+
+<div>
+
+<h1>Database</h1>
+
+<div class="subtitle">
+Kulzzy PostgreSQL database.
+</div>
+
+</div>
+
+</div>
+
+
+<div class="metrics">
+
+<div class="card">
+
+<div class="metric-label">
+Database
+</div>
+
+<div class="metric-value">
+PostgreSQL
+</div>
+
+<span class="badge">
+HEALTHY
+</span>
+
+</div>
+
+
+<div class="card">
+
+<div class="metric-label">
+Connections
+</div>
+
+<div class="metric-value">
+8
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- CODE -->
+
+<section id="code" class="page">
+
+<div class="page-header">
+
+<div>
+
+<h1>Kulzzy Code Hub</h1>
+
+<div class="subtitle">
+Your own repository system.
+</div>
+
+</div>
+
+<button class="gold">
++ Repository
+</button>
+
+</div>
+
+
+<div class="card table-card">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Repository</th>
+<th>Visibility</th>
+<th>Branch</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>
+KULZZY-AUTO-PLAYER
+</td>
+
+<td>
+Private
+</td>
+
+<td>
+main
+</td>
+
+<td>
+<span class="badge">
+READY
+</span>
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- RADIO -->
+
+<section id="radio" class="page">
+
+<div class="page-header">
+
+<div>
+
+<h1>Radio</h1>
+
+<div class="subtitle">
+Kulzzy streaming infrastructure.
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="metric-label">
+Stream Status
+</div>
+
+<div class="metric-value">
+🔴 LIVE ON AIR
+</div>
+
+<span class="badge">
+READY
+</span>
+
+</div>
+
+</section>
+
+
+<!-- USERS -->
+
+<section id="users" class="page">
+
+<div class="page-header">
+
+<div>
+
+<h1>Users</h1>
+
+<div class="subtitle">
+Infrastructure administrators.
+</div>
+
+</div>
+
+<button class="gold">
++ Administrator
+</button>
+
+</div>
+
+
+<div class="card">
+
+<div class="service-row">
+
+<div>
+<strong>Kulzzy Administrator</strong>
+<br>
+<small>Owner</small>
+</div>
+
+<span class="badge">
+FULL ACCESS
+</span>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- SECURITY -->
+
+<section id="security" class="page">
+
+<div class="page-header">
+
+<div>
+
+<h1>Security</h1>
+
+<div class="subtitle">
+Server protection.
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="service-row">
+
+<div>
+<strong>🧱 Firewall</strong>
+<br>
+<small>Inbound protection</small>
+</div>
+
+<span class="badge">
+ACTIVE
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div>
+<strong>🔑 SSH Keys</strong>
+<br>
+<small>Key authentication</small>
+</div>
+
+<span class="badge">
+ACTIVE
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div>
+<strong>🔒 HTTPS</strong>
+<br>
+<small>Encrypted traffic</small>
+</div>
+
+<span class="badge">
+READY
+</span>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- BACKUPS -->
+
+<section id="backups" class="page">
+
+<div class="page-header">
+
+<div>
+
+<h1>Backups</h1>
+
+<div class="subtitle">
+Kulzzy disaster recovery.
+</div>
+
+</div>
+
+<button class="gold">
+Run Backup
+</button>
+
+</div>
+
+
+<div class="card">
+
+<div class="service-row">
+
+<div>
+<strong>Server Configuration</strong>
+<br>
+<small>Daily backup</small>
+</div>
+
+<span class="badge">
+PLANNED
+</span>
+
+</div>
+
+
+<div class="service-row">
+
+<div>
+<strong>Media Storage</strong>
+<br>
+<small>Daily backup</small>
+</div>
+
+<span class="badge">
+PLANNED
+</span>
+
+</div>
+
+</div>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+<script>
+
+const navItems =
+document.querySelectorAll(".nav-item");
+
+const pages =
+document.querySelectorAll(".page");
+
+
+navItems.forEach(item => {
+
+item.addEventListener("click", () => {
+
+navItems.forEach(i =>
+i.classList.remove("active")
+);
+
+item.classList.add("active");
+
+
+pages.forEach(page =>
+page.classList.remove("active")
+);
+
+
+const target =
+document.getElementById(
+item.dataset.page
+);
+
+if(target){
+target.classList.add("active");
+}
+
+});
+
+});
+
+
+function refreshServer(){
+
+const cpu =
+Math.floor(Math.random() * 40) + 20;
+
+document.getElementById("cpu")
+.textContent = cpu + "%";
+
+document.getElementById("cpuBar")
+.style.width = cpu + "%";
+
+}
+
+</script>
+
+</body>
+</html>
