@@ -1,0 +1,30 @@
+[Unit]
+Description=Kulzzy Server Control Center
+Documentation=https://kulzzyradio.com
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+
+User=root
+
+WorkingDirectory=/srv/kulzzy
+
+Environment="PYTHONUNBUFFERED=1"
+Environment="KULZZY_STORAGE_ROOT=/kulzzy"
+
+ExecStart=/srv/kulzzy/venv/bin/python /srv/kulzzy/api/server.py
+
+Restart=always
+RestartSec=5
+
+TimeoutStartSec=30
+TimeoutStopSec=30
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target 
