@@ -1,16 +1,36 @@
-from flask import Flask, jsonify, request, send_file
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    send_file
+)
+
 from functools import wraps
+
 from pathlib import Path
+
 from secrets import compare_digest
+
 import os
 import platform
 import shutil
 import time
 import uuid
 
+from auth import (
+    ensure_database,
+    authenticate,
+    get_session,
+    revoke_session,
+    cleanup_sessions
+)
+
+
 app = Flask(__name__)
 
+
 START_TIME = time.time()
+
 
 STORAGE_ROOT = Path(
     os.environ.get(
@@ -19,22 +39,36 @@ STORAGE_ROOT = Path(
     )
 ).resolve()
 
+
 ALLOWED_AREAS = {
+
     "audio",
+
     "celebrants",
+
     "websites",
+
     "repositories",
+
     "uploads",
+
     "backups"
+
 }
 
-MAX_UPLOAD_SIZE = 500 * 1024 * 1024
 
-app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE
+MAX_UPLOAD_SIZE = (
+    500 * 1024 * 1024
+)
+
+
+app.config[
+    "MAX_CONTENT_LENGTH"
+] = MAX_UPLOAD_SIZE
 
 
 # =====================================================
-# SECURITY CONFIGURATION
+# API KEY
 # =====================================================
 
 API_KEY = os.environ.get(
@@ -43,32 +77,50 @@ API_KEY = os.environ.get(
 )
 
 
-def require_api_key(function):
+# =====================================================
+# AUTHENTICATION
+# =====================================================
+
+def require_auth(function):
 
     @wraps(function)
-    def protected(*args, **kwargs):
+    def protected(
+        *args,
+        **kwargs
+    ):
 
-        if not API_KEY:
-
-            return jsonify({
-                "error":
-                    "Server security is not configured."
-            }), 503
-
-        supplied_key = request.headers.get(
-            "X-Kulzzy-Key",
-            ""
+        authorization = (
+            request.headers.get(
+                "Authorization",
+                ""
+            )
         )
 
-        if not compare_digest(
-            supplied_key,
-            API_KEY
+        if not authorization.startswith(
+            "Bearer "
         ):
 
             return jsonify({
                 "error":
-                    "Unauthorized"
+                    "Authentication required"
             }), 401
+
+        token = (
+            authorization[7:].strip()
+        )
+
+        session = get_session(
+            token
+        )
+
+        if not session:
+
+            return jsonify({
+                "error":
+                    "Invalid or expired session"
+            }), 401
+
+        request.kulzzy_admin = session
 
         return function(
             *args,
@@ -79,7 +131,39 @@ def require_api_key(function):
 
 
 # =====================================================
-# STORAGE SECURITY
+# OWNER-ONLY
+# =====================================================
+
+def require_owner(function):
+
+    @wraps(function)
+    @require_auth
+    def protected(
+        *args,
+        **kwargs
+    ):
+
+        if (
+            request.kulzzy_admin["role"]
+            !=
+            "owner"
+        ):
+
+            return jsonify({
+                "error":
+                    "Owner permission required"
+            }), 403
+
+        return function(
+            *args,
+            **kwargs
+        )
+
+    return protected
+
+
+# =====================================================
+# STORAGE
 # =====================================================
 
 def safe_area(area):
@@ -225,7 +309,7 @@ def get_storage():
             (1024 ** 4)
         )
 
-        usage_percent = (
+        percentage = (
             disk.used /
             disk.total *
             100
@@ -247,7 +331,7 @@ def get_storage():
 
             "usage_percent":
                 round(
-                    usage_percent,
+                    percentage,
                     1
                 )
 
@@ -269,7 +353,8 @@ def get_storage():
 def get_uptime():
 
     seconds = int(
-        time.time() -
+        time.time()
+        -
         START_TIME
     )
 
@@ -321,21 +406,144 @@ def home():
             "online",
 
         "version":
-            "1.2.0"
+            "2.0.0"
 
     })
 
 
 # =====================================================
-# PROTECTED SERVER STATUS
+# LOGIN
+# =====================================================
+
+@app.route(
+    "/api/auth/login",
+    methods=["POST"]
+)
+def login():
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    username = str(
+        data.get(
+            "username",
+            ""
+        )
+    ).strip()
+
+    password = str(
+        data.get(
+            "password",
+            ""
+        )
+    )
+
+    if not username or not password:
+
+        return jsonify({
+
+            "error":
+                "Username and password are required."
+
+        }), 400
+
+    result = authenticate(
+        username,
+        password
+    )
+
+    if not result:
+
+        return jsonify({
+
+            "error":
+                "Invalid username or password."
+
+        }), 401
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "session":
+            result
+
+    })
+
+
+# =====================================================
+# LOGOUT
+# =====================================================
+
+@app.route(
+    "/api/auth/logout",
+    methods=["POST"]
+)
+@require_auth
+def logout():
+
+    authorization = (
+        request.headers.get(
+            "Authorization",
+            ""
+        )
+    )
+
+    token = (
+        authorization[7:].strip()
+    )
+
+    revoke_session(
+        token
+    )
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "message":
+            "Logged out successfully."
+
+    })
+
+
+# =====================================================
+# CURRENT ADMIN
+# =====================================================
+
+@app.route(
+    "/api/auth/me",
+    methods=["GET"]
+)
+@require_auth
+def current_admin():
+
+    return jsonify({
+
+        "authenticated":
+            True,
+
+        "admin":
+            request.kulzzy_admin
+
+    })
+
+
+# =====================================================
+# SERVER STATUS
 # =====================================================
 
 @app.route(
     "/api/status",
     methods=["GET"]
 )
-@require_api_key
+@require_auth
 def server_status():
+
+    cleanup_sessions()
 
     memory = get_memory()
 
@@ -358,7 +566,7 @@ def server_status():
                 "production",
 
             "version":
-                "1.2.0",
+                "2.0.0",
 
             "hostname":
                 platform.node(),
@@ -427,16 +635,20 @@ def server_status():
     "/api/files/<area>",
     methods=["GET"]
 )
-@require_api_key
+@require_auth
 def list_files(area):
 
-    root = safe_area(area)
+    root = safe_area(
+        area
+    )
 
     if root is None:
 
         return jsonify({
+
             "error":
                 "Invalid storage area"
+
         }), 400
 
     files = []
@@ -480,7 +692,7 @@ def list_files(area):
     "/api/files/<area>/<filename>",
     methods=["GET"]
 )
-@require_api_key
+@require_auth
 def download_file(
     area,
     filename
@@ -494,15 +706,19 @@ def download_file(
     if path is None:
 
         return jsonify({
+
             "error":
                 "Invalid file"
+
         }), 400
 
     if not path.exists():
 
         return jsonify({
+
             "error":
                 "File not found"
+
         }), 404
 
     return send_file(
@@ -519,32 +735,42 @@ def download_file(
     "/api/files/<area>",
     methods=["POST"]
 )
-@require_api_key
+@require_auth
 def upload_file(area):
 
-    root = safe_area(area)
+    root = safe_area(
+        area
+    )
 
     if root is None:
 
         return jsonify({
+
             "error":
                 "Invalid storage area"
+
         }), 400
 
     if "file" not in request.files:
 
         return jsonify({
+
             "error":
                 "No file supplied"
+
         }), 400
 
-    uploaded = request.files["file"]
+    uploaded = request.files[
+        "file"
+    ]
 
     if not uploaded.filename:
 
         return jsonify({
+
             "error":
                 "Invalid filename"
+
         }), 400
 
     original_name = Path(
@@ -559,7 +785,8 @@ def upload_file(area):
     )
 
     filename = (
-        uuid.uuid4().hex +
+        uuid.uuid4().hex
+        +
         extension
     )
 
@@ -603,7 +830,7 @@ def upload_file(area):
     "/api/files/<area>/<filename>",
     methods=["DELETE"]
 )
-@require_api_key
+@require_owner
 def delete_file(
     area,
     filename
@@ -617,15 +844,19 @@ def delete_file(
     if path is None:
 
         return jsonify({
+
             "error":
                 "Invalid file"
+
         }), 400
 
     if not path.exists():
 
         return jsonify({
+
             "error":
                 "File not found"
+
         }), 404
 
     path.unlink()
@@ -645,7 +876,7 @@ def delete_file(
 
 
 # =====================================================
-# UPLOAD ERROR
+# FILE SIZE ERROR
 # =====================================================
 
 @app.errorhandler(
@@ -662,10 +893,12 @@ def file_too_large(error):
 
 
 # =====================================================
-# START SERVER
+# START
 # =====================================================
 
 if __name__ == "__main__":
+
+    ensure_database()
 
     for area in ALLOWED_AREAS:
 
@@ -685,4 +918,4 @@ if __name__ == "__main__":
 
         debug=False
 
-        )
+    )
