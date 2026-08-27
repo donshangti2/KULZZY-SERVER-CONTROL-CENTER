@@ -2,102 +2,35 @@
 
 set -e
 
-PROJECT_DIR="/opt/kulzzy/server-control-center"
-BACKUP_DIR="/srv/kulzzy/backups/deployments"
-LOG_FILE="/srv/kulzzy/logs/deploy.log"
-
-SERVICE_NAME="kulzzy-server-api"
-
-mkdir -p "$BACKUP_DIR"
-mkdir -p "$(dirname "$LOG_FILE")"
-
 echo "========================================"
-echo " KULZZY DEPLOYMENT ENGINE"
+echo "       KULZZY DEPLOYMENT ENGINE"
 echo "========================================"
-echo ""
 
-echo "[1/7] Starting deployment..."
+PROJECT="/srv/kulzzy"
 
-date '+%Y-%m-%d %H:%M:%S' \
-    >> "$LOG_FILE"
+cd "$PROJECT"
 
-echo "[2/7] Checking project..."
+echo "[1/5] Pulling latest code..."
 
-if [ ! -d "$PROJECT_DIR" ]; then
+git pull origin main
 
-    echo "ERROR: Project directory not found."
+echo "[2/5] Checking Docker..."
 
-    exit 1
+docker --version
 
-fi
-
-cd "$PROJECT_DIR"
-
-echo "[3/7] Creating backup..."
-
-BACKUP_NAME="backup-$(date '+%Y%m%d-%H%M%S')"
-
-mkdir -p "$BACKUP_DIR/$BACKUP_NAME"
-
-cp -r \
-    api \
-    Dockerfile \
-    docker-compose.yml \
-    requirements.txt \
-    "$BACKUP_DIR/$BACKUP_NAME/" \
-    2>/dev/null || true
-
-echo "[4/7] Updating source code..."
-
-if [ -d ".git" ]; then
-
-    git fetch --all
-
-    git pull --ff-only
-
-else
-
-    echo "WARNING: Git repository not detected."
-
-fi
-
-echo "[5/7] Building Kulzzy services..."
+echo "[3/5] Building Kulzzy services..."
 
 docker compose build
 
-echo "[6/7] Starting services..."
+echo "[4/5] Starting services..."
 
 docker compose up -d
 
-echo "[7/7] Checking service..."
+echo "[5/5] Checking service status..."
 
-sleep 5
-
-if docker compose ps | grep -q "$SERVICE_NAME"; then
-
-    echo ""
-    echo "DEPLOYMENT SUCCESSFUL"
-    echo ""
-
-    echo "Kulzzy Server API is running."
-
-    echo ""
-
-    docker compose ps
-
-else
-
-    echo ""
-    echo "DEPLOYMENT FAILED"
-    echo ""
-
-    docker compose logs \
-        --tail=100
-
-    exit 1
-
-fi
+docker compose ps
 
 echo ""
-echo "Deployment completed."
-echo ""
+echo "========================================"
+echo "       KULZZY DEPLOYMENT COMPLETE"
+echo "========================================"
