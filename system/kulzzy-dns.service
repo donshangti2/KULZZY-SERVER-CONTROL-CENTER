@@ -1,0 +1,26 @@
+[Unit]
+Description=Kulzzy Radio DNS Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+User=root
+Group=root
+
+WorkingDirectory=/srv/kulzzy
+
+ExecStart=/usr/bin/python3 /srv/kulzzy/dns/dns_server.py
+
+Restart=always
+RestartSec=5
+
+Environment=PYTHONUNBUFFERED=1
+
+LimitNOFILE=65535
+
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target
