@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request, send_file
+from functools import wraps
 from pathlib import Path
+from secrets import compare_digest
 import os
 import platform
 import shutil
@@ -17,7 +19,6 @@ STORAGE_ROOT = Path(
     )
 ).resolve()
 
-
 ALLOWED_AREAS = {
     "audio",
     "celebrants",
@@ -27,24 +28,75 @@ ALLOWED_AREAS = {
     "backups"
 }
 
-
 MAX_UPLOAD_SIZE = 500 * 1024 * 1024
 
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE
 
 
+# =====================================================
+# SECURITY CONFIGURATION
+# =====================================================
+
+API_KEY = os.environ.get(
+    "KULZZY_API_KEY",
+    ""
+)
+
+
+def require_api_key(function):
+
+    @wraps(function)
+    def protected(*args, **kwargs):
+
+        if not API_KEY:
+
+            return jsonify({
+                "error":
+                    "Server security is not configured."
+            }), 503
+
+        supplied_key = request.headers.get(
+            "X-Kulzzy-Key",
+            ""
+        )
+
+        if not compare_digest(
+            supplied_key,
+            API_KEY
+        ):
+
+            return jsonify({
+                "error":
+                    "Unauthorized"
+            }), 401
+
+        return function(
+            *args,
+            **kwargs
+        )
+
+    return protected
+
+
+# =====================================================
+# STORAGE SECURITY
+# =====================================================
+
 def safe_area(area):
 
     if area not in ALLOWED_AREAS:
+
         return None
 
     path = (
-        STORAGE_ROOT / area
+        STORAGE_ROOT /
+        area
     ).resolve()
 
     if not str(path).startswith(
         str(STORAGE_ROOT) + os.sep
     ):
+
         return None
 
     path.mkdir(
@@ -55,29 +107,42 @@ def safe_area(area):
     return path
 
 
-def safe_file(area, filename):
+def safe_file(
+    area,
+    filename
+):
 
     root = safe_area(area)
 
     if root is None:
+
         return None
 
-    filename = Path(filename).name
+    filename = Path(
+        filename
+    ).name
 
     if not filename:
+
         return None
 
     path = (
-        root / filename
+        root /
+        filename
     ).resolve()
 
     if not str(path).startswith(
         str(root) + os.sep
     ):
+
         return None
 
     return path
 
+
+# =====================================================
+# SERVER METRICS
+# =====================================================
 
 def get_cpu_usage():
 
@@ -106,6 +171,7 @@ def get_memory():
         memory = psutil.virtual_memory()
 
         return {
+
             "total_gb":
                 round(
                     memory.total /
@@ -125,14 +191,19 @@ def get_memory():
                     memory.percent,
                     1
                 )
+
         }
 
     except Exception:
 
         return {
+
             "total_gb": 0,
+
             "used_gb": 0,
+
             "usage_percent": 0
+
         }
 
 
@@ -140,10 +211,9 @@ def get_storage():
 
     try:
 
-        disk =
-            shutil.disk_usage(
-                STORAGE_ROOT
-            )
+        disk = shutil.disk_usage(
+            STORAGE_ROOT
+        )
 
         total_tb = (
             disk.total /
@@ -180,14 +250,19 @@ def get_storage():
                     usage_percent,
                     1
                 )
+
         }
 
     except Exception:
 
         return {
+
             "total_tb": 0,
+
             "used_tb": 0,
+
             "usage_percent": 0
+
         }
 
 
@@ -224,6 +299,10 @@ def get_uptime():
     )
 
 
+# =====================================================
+# PUBLIC HEALTH CHECK
+# =====================================================
+
 @app.route(
     "/",
     methods=["GET"]
@@ -242,15 +321,20 @@ def home():
             "online",
 
         "version":
-            "1.1.0"
+            "1.2.0"
 
     })
 
+
+# =====================================================
+# PROTECTED SERVER STATUS
+# =====================================================
 
 @app.route(
     "/api/status",
     methods=["GET"]
 )
+@require_api_key
 def server_status():
 
     memory = get_memory()
@@ -274,7 +358,7 @@ def server_status():
                 "production",
 
             "version":
-                "1.1.0",
+                "1.2.0",
 
             "hostname":
                 platform.node(),
@@ -335,10 +419,15 @@ def server_status():
     })
 
 
+# =====================================================
+# LIST FILES
+# =====================================================
+
 @app.route(
     "/api/files/<area>",
     methods=["GET"]
 )
+@require_api_key
 def list_files(area):
 
     root = safe_area(area)
@@ -383,10 +472,15 @@ def list_files(area):
     })
 
 
+# =====================================================
+# DOWNLOAD
+# =====================================================
+
 @app.route(
     "/api/files/<area>/<filename>",
     methods=["GET"]
 )
+@require_api_key
 def download_file(
     area,
     filename
@@ -417,10 +511,15 @@ def download_file(
     )
 
 
+# =====================================================
+# UPLOAD
+# =====================================================
+
 @app.route(
     "/api/files/<area>",
     methods=["POST"]
 )
+@require_api_key
 def upload_file(area):
 
     root = safe_area(area)
@@ -465,7 +564,8 @@ def upload_file(area):
     )
 
     destination = (
-        root / filename
+        root /
+        filename
     )
 
     uploaded.save(
@@ -495,10 +595,15 @@ def upload_file(area):
     }), 201
 
 
+# =====================================================
+# DELETE
+# =====================================================
+
 @app.route(
     "/api/files/<area>/<filename>",
     methods=["DELETE"]
 )
+@require_api_key
 def delete_file(
     area,
     filename
@@ -539,6 +644,10 @@ def delete_file(
     })
 
 
+# =====================================================
+# UPLOAD ERROR
+# =====================================================
+
 @app.errorhandler(
     413
 )
@@ -551,6 +660,10 @@ def file_too_large(error):
 
     }), 413
 
+
+# =====================================================
+# START SERVER
+# =====================================================
 
 if __name__ == "__main__":
 
@@ -572,4 +685,4 @@ if __name__ == "__main__":
 
         debug=False
 
-    )
+        )
