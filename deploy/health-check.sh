@@ -1,27 +1,30 @@
 #!/bin/bash
 
-API_URL="http://127.0.0.1:5000/"
+echo "========================================"
+echo "        KULZZY HEALTH CHECK"
+echo "========================================"
 
-echo "Checking Kulzzy Server..."
+PROJECT="/srv/kulzzy"
 
-HTTP_STATUS=$(curl \
-    -s \
-    -o /dev/null \
-    -w "%{http_code}" \
-    "$API_URL")
+cd "$PROJECT"
 
-if [ "$HTTP_STATUS" = "200" ]; then
+echo ""
+echo "Docker:"
+docker --version
 
-    echo "KULZZY SERVER: HEALTHY"
+echo ""
+echo "Containers:"
+docker compose ps
 
-    exit 0
-
-else
-
-    echo "KULZZY SERVER: NOT HEALTHY"
-
-    echo "HTTP STATUS: $HTTP_STATUS"
-
+echo ""
+echo "API:"
+curl -fsS http://127.0.0.1:5000/ || {
+    echo "API OFFLINE"
     exit 1
+}
 
-fi
+echo ""
+echo ""
+echo "========================================"
+echo "        KULZZY SERVER HEALTHY"
+echo "========================================"
