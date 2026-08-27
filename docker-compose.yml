@@ -15,4 +15,15 @@ services:
       TZ: Africa/Lagos
 
     volumes:
-      - /:/host:ro
+
+      - /srv/kulzzy/audio:/kulzzy/audio
+
+      - /srv/kulzzy/celebrants:/kulzzy/celebrants
+
+      - /srv/kulzzy/websites:/kulzzy/websites
+
+      - /srv/kulzzy/repositories:/kulzzy/repositories
+
+      - /srv/kulzzy/uploads:/kulzzy/uploads
+
+      - /srv/kulzzy/backups:/kulzzy/backups
