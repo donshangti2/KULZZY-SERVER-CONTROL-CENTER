@@ -22,3 +22,8 @@ services:
     volumes:
 
       - /srv/kulzzy:/kulzzy
+    volumes:
+
+      - /srv/kulzzy:/kulzzy
+
+      - /var/run/docker.sock:/var/run/docker.sock
