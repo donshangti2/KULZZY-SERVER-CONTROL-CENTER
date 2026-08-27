@@ -8,6 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY api ./api
 
+RUN mkdir -p /kulzzy/auth
+
 EXPOSE 5000
 
 CMD ["python", "api/server.py"]
