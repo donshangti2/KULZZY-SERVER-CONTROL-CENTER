@@ -1,455 +1,1185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>Kulzzy Server Control Center</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
 
+html,
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    padding: 0;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
     background: #f3f6fa;
     color: #13233d;
 }
 
-/* HEADER */
-.header {
-    height: 64px;
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+.login-screen {
+
+    position: fixed;
+
+    inset: 0;
+
     background: #07152f;
-    color: white;
+
     display: flex;
+
     align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+    z-index: 99999;
+}
+
+
+.login-box {
+
+    width: 100%;
+
+    max-width: 410px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 30px;
+
+    box-shadow:
+        0 25px 70px
+        rgba(0,0,0,.35);
+}
+
+
+.login-logo {
+
+    text-align: center;
+
+    font-size: 23px;
+
+    font-weight: 900;
+
+    color: #07152f;
+
+    margin-bottom: 20px;
+}
+
+
+.login-logo span {
+
+    color: #d5a900;
+}
+
+
+.login-box h1 {
+
+    text-align: center;
+
+    margin: 0 0 8px;
+
+    font-size: 22px;
+}
+
+
+.login-box p {
+
+    text-align: center;
+
+    color: #718096;
+
+    font-size: 13px;
+
+    margin: 0 0 22px;
+}
+
+
+.login-box input {
+
+    width: 100%;
+
+    padding: 14px;
+
+    margin-bottom: 12px;
+
+    border: 1px solid #dfe5ed;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+
+.login-box input:focus {
+
+    border-color: #f5c542;
+}
+
+
+.login-button {
+
+    width: 100%;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    padding: 14px;
+
+    background: #f5c542;
+
+    color: #111;
+
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+
+.login-button:hover {
+
+    opacity: .9;
+}
+
+
+.login-error {
+
+    color: #d64545;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    margin-top: 12px;
+
+    min-height: 18px;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.header {
+
+    height: 64px;
+
+    background: #07152f;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
     justify-content: space-between;
+
     padding: 0 18px;
+
     position: sticky;
+
     top: 0;
+
     z-index: 100;
 }
 
+
 .logo {
+
     font-size: 18px;
-    font-weight: 800;
+
+    font-weight: 900;
+
+    letter-spacing: .4px;
 }
 
+
 .logo span {
+
     color: #f5c542;
 }
 
-.server-status {
+
+.header-right {
+
     display: flex;
+
     align-items: center;
+
+    gap: 15px;
+}
+
+
+.server-status {
+
+    display: flex;
+
+    align-items: center;
+
     gap: 7px;
+
     font-size: 13px;
 }
 
+
 .status-dot {
+
     width: 9px;
+
     height: 9px;
+
     border-radius: 50%;
+
     background: #22c55e;
 }
 
-/* LAYOUT */
-.layout {
-    display: flex;
-    min-height: calc(100vh - 64px);
+
+.logout-button {
+
+    border: 0;
+
+    background: #193a69;
+
+    color: white;
+
+    padding: 8px 11px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-weight: bold;
 }
 
-/* SIDEBAR */
+
+/* =====================================================
+   LAYOUT
+===================================================== */
+
+.layout {
+
+    display: flex;
+
+    min-height:
+        calc(100vh - 64px);
+}
+
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
 .sidebar {
+
     width: 245px;
+
     background: #0d2145;
+
     color: white;
+
     padding: 15px 10px;
 }
 
+
 .nav-item {
+
     padding: 12px;
+
     margin-bottom: 5px;
+
     border-radius: 9px;
+
     cursor: pointer;
+
     display: flex;
-    gap: 10px;
+
     align-items: center;
+
+    gap: 10px;
+
     font-size: 14px;
 }
 
+
 .nav-item:hover,
 .nav-item.active {
+
     background: #193a69;
 }
 
-/* MAIN */
+
+/* =====================================================
+   MAIN
+===================================================== */
+
 .main {
+
     flex: 1;
+
     padding: 20px;
-    max-width: 1400px;
-    margin: auto;
+
     width: 100%;
+
+    max-width: 1400px;
+
+    margin: auto;
 }
 
+
 .page {
+
     display: none;
 }
 
+
 .page.active {
+
     display: block;
 }
 
+
 .page-header {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
+    gap: 15px;
+
     margin-bottom: 18px;
 }
 
+
 .page-header h1 {
+
     margin: 0;
+
     font-size: 24px;
 }
 
+
 .subtitle {
+
     color: #718096;
+
     font-size: 13px;
+
     margin-top: 5px;
 }
 
-/* BUTTON */
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
 button {
+
+    font-family: inherit;
+}
+
+
+.primary {
+
+    background: #07152f;
+
+    color: white;
+
     border: 0;
+
     border-radius: 9px;
+
     padding: 10px 14px;
+
     font-weight: bold;
+
     cursor: pointer;
 }
 
-.primary {
-    background: #07152f;
-    color: white;
-}
 
 .gold {
+
     background: #f5c542;
+
     color: #111;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    padding: 10px 14px;
+
+    font-weight: bold;
+
+    cursor: pointer;
 }
 
-/* METRICS */
+
+/* =====================================================
+   METRICS
+===================================================== */
+
 .metrics {
+
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
     gap: 14px;
 }
 
+
 .card {
+
     background: white;
+
     border: 1px solid #e3e8ef;
+
     border-radius: 14px;
+
     padding: 17px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.04);
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.04);
 }
 
+
 .metric-label {
+
     color: #718096;
+
     font-size: 13px;
 }
 
+
 .metric-value {
+
     font-size: 27px;
-    font-weight: 800;
+
+    font-weight: 900;
+
     margin: 9px 0;
 }
 
+
 .progress {
+
     height: 8px;
+
     background: #e8edf4;
+
     border-radius: 20px;
+
     overflow: hidden;
+
+    margin-top: 10px;
 }
+
 
 .progress-fill {
+
     height: 100%;
-    width: 32%;
+
+    width: 0%;
+
     background: #f5c542;
+
+    transition:
+        width .4s ease;
 }
 
-/* PANELS */
+
+/* =====================================================
+   PANELS
+===================================================== */
+
 .panel {
+
     margin-top: 16px;
 }
 
+
 .panel-title {
+
     font-size: 17px;
+
+    font-weight: 800;
+
     margin-bottom: 12px;
 }
 
-/* ROW */
+
+/* =====================================================
+   SERVICE ROW
+===================================================== */
+
 .service-row {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
+    gap: 10px;
+
     padding: 13px;
+
     border: 1px solid #e5eaf1;
+
     border-radius: 10px;
+
     margin-bottom: 9px;
+
+    background: white;
 }
 
+
 .service-left {
+
     display: flex;
+
     align-items: center;
+
     gap: 10px;
 }
 
+
 .service-icon {
+
     width: 36px;
+
     height: 36px;
+
     display: grid;
+
     place-items: center;
+
     background: #eef3fa;
+
     border-radius: 9px;
 }
 
+
+/* =====================================================
+   BADGES
+===================================================== */
+
 .badge {
+
+    display: inline-block;
+
     padding: 5px 9px;
+
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
     background: #eaf8f1;
+
     color: #16804c;
 }
 
-/* TABLE */
+
+.badge.warning {
+
+    background: #fff7dc;
+
+    color: #8a6800;
+}
+
+
+.badge.danger {
+
+    background: #fdecec;
+
+    color: #b52c2c;
+}
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
 .table-card {
+
     overflow-x: auto;
 }
 
+
 table {
+
     width: 100%;
+
     border-collapse: collapse;
 }
 
+
 th,
 td {
+
     text-align: left;
+
     padding: 13px;
-    border-bottom: 1px solid #e5eaf1;
+
+    border-bottom:
+        1px solid #e5eaf1;
+
     font-size: 13px;
 }
 
+
 th {
+
     background: #f8fafc;
 }
 
-/* MOBILE */
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
 @media(max-width:900px) {
 
     .sidebar {
+
         width: 70px;
     }
 
+    .nav-item {
+
+        justify-content: center;
+    }
+
     .nav-item span {
+
         display: none;
     }
 
     .metrics {
-        grid-template-columns: repeat(2,1fr);
+
+        grid-template-columns:
+            repeat(2, 1fr);
     }
+
 }
+
 
 @media(max-width:560px) {
 
     .sidebar {
+
         display: none;
     }
 
     .main {
+
         padding: 13px;
     }
 
+    .header {
+
+        padding: 0 12px;
+    }
+
+    .logo {
+
+        font-size: 15px;
+    }
+
+    .server-status {
+
+        display: none;
+    }
+
     .metrics {
-        grid-template-columns: repeat(2,1fr);
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 9px;
     }
 
     .metric-value {
+
         font-size: 21px;
     }
 
+    .page-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
     .page-header h1 {
+
         font-size: 20px;
     }
+
 }
+
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+.loading {
+
+    opacity: .65;
+}
+
 </style>
+
 </head>
 
+
 <body>
+
+
+<!-- =====================================================
+     LOGIN SCREEN
+===================================================== -->
+
+<div
+    id="loginScreen"
+    class="login-screen"
+>
+
+    <div class="login-box">
+
+        <div class="login-logo">
+
+            KULZZY
+            <span>
+                SERVER CONTROL
+            </span>
+
+        </div>
+
+
+        <h1>
+            Administrator Login
+        </h1>
+
+
+        <p>
+            Secure Kulzzy infrastructure control
+        </p>
+
+
+        <form id="loginForm">
+
+            <input
+                type="text"
+                id="username"
+                placeholder="Username"
+                autocomplete="username"
+                required
+            >
+
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                autocomplete="current-password"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+                LOGIN
+            </button>
+
+
+            <div
+                id="loginError"
+                class="login-error"
+            ></div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
 <header class="header">
 
     <div class="logo">
-        KULZZY <span>SERVER CONTROL</span>
+
+        KULZZY
+        <span>
+            SERVER CONTROL
+        </span>
+
     </div>
 
-    <div class="server-status">
-        <div class="status-dot"></div>
-        Server Online
+
+    <div class="header-right">
+
+        <div class="server-status">
+
+            <div
+                class="status-dot"
+                id="statusDot"
+            ></div>
+
+            <span id="statusText">
+                Server Online
+            </span>
+
+        </div>
+
+
+        <button
+            class="logout-button"
+            onclick="logout()"
+        >
+            Logout
+        </button>
+
     </div>
 
 </header>
 
 
+<!-- =====================================================
+     MAIN LAYOUT
+===================================================== -->
+
 <div class="layout">
 
-<!-- SIDEBAR -->
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
 <aside class="sidebar">
 
-    <div class="nav-item active" data-page="dashboard">
-        📊 <span>Dashboard</span>
+
+    <div
+        class="nav-item active"
+        data-page="dashboard"
+    >
+
+        📊
+
+        <span>
+            Dashboard
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="websites">
-        🌐 <span>Websites</span>
+
+    <div
+        class="nav-item"
+        data-page="websites"
+    >
+
+        🌐
+
+        <span>
+            Websites
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="storage">
-        🎵 <span>Audio & Storage</span>
+
+    <div
+        class="nav-item"
+        data-page="storage"
+    >
+
+        🎵
+
+        <span>
+            Audio & Storage
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="database">
-        🗄️ <span>Database</span>
+
+    <div
+        class="nav-item"
+        data-page="database"
+    >
+
+        🗄️
+
+        <span>
+            Database
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="code">
-        💻 <span>Code Hub</span>
+
+    <div
+        class="nav-item"
+        data-page="code"
+    >
+
+        💻
+
+        <span>
+            Code Hub
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="radio">
-        📡 <span>Radio</span>
+
+    <div
+        class="nav-item"
+        data-page="radio"
+    >
+
+        📡
+
+        <span>
+            Radio
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="users">
-        👥 <span>Users</span>
+
+    <div
+        class="nav-item"
+        data-page="users"
+    >
+
+        👥
+
+        <span>
+            Users
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="security">
-        🔐 <span>Security</span>
+
+    <div
+        class="nav-item"
+        data-page="security"
+    >
+
+        🔐
+
+        <span>
+            Security
+        </span>
+
     </div>
 
-    <div class="nav-item" data-page="backups">
-        💾 <span>Backups</span>
+
+    <div
+        class="nav-item"
+        data-page="backups"
+    >
+
+        💾
+
+        <span>
+            Backups
+        </span>
+
     </div>
+
 
 </aside>
 
 
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
 <main class="main">
 
 
-<!-- DASHBOARD -->
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
 
-<section id="dashboard" class="page active">
+<section
+    id="dashboard"
+    class="page active"
+>
+
 
 <div class="page-header">
 
-<div>
-<h1>Kulzzy Server Control Center</h1>
+    <div>
 
-<div class="subtitle">
-Kulzzy Infrastructure v1.0
+        <h1>
+            Kulzzy Server Control Center
+        </h1>
+
+        <div class="subtitle">
+            Kulzzy Infrastructure v1.0
+        </div>
+
+    </div>
+
+
+    <button
+        class="gold"
+        onclick="loadServerStatus()"
+    >
+        ↻ Refresh
+    </button>
+
 </div>
 
-</div>
 
-<button class="gold" onclick="refreshServer()">
-↻ Refresh
-</button>
-
-</div>
-
+<!-- METRICS -->
 
 <div class="metrics">
 
-<div class="card">
 
-<div class="metric-label">
-CPU Usage
-</div>
+    <div class="card">
 
-<div class="metric-value" id="cpu">
-32%
-</div>
+        <div class="metric-label">
+            CPU Usage
+        </div>
 
-<div class="progress">
-<div class="progress-fill" id="cpuBar"></div>
-</div>
+        <div
+            class="metric-value"
+            id="cpu"
+        >
+            --
+        </div>
 
-</div>
+        <div class="progress">
 
+            <div
+                class="progress-fill"
+                id="cpuBar"
+            ></div>
 
-<div class="card">
+        </div>
 
-<div class="metric-label">
-Memory
-</div>
-
-<div class="metric-value">
-24 GB
-</div>
-
-<div class="metric-label">
-of 32 GB
-</div>
-
-<div class="progress">
-<div class="progress-fill" style="width:75%">
-</div>
-</div>
-
-</div>
+    </div>
 
 
-<div class="card">
+    <div class="card">
 
-<div class="metric-label">
-Storage
-</div>
+        <div class="metric-label">
+            Memory
+        </div>
 
-<div class="metric-value">
-1.8 TB
-</div>
+        <div
+            class="metric-value"
+            id="memory"
+        >
+            --
+        </div>
 
-<div class="metric-label">
-of 4 TB
-</div>
+        <div
+            class="metric-label"
+            id="memoryLabel"
+        >
+            Waiting for server
+        </div>
 
-<div class="progress">
-<div class="progress-fill" style="width:45%">
-</div>
-</div>
+        <div class="progress">
 
-</div>
+            <div
+                class="progress-fill"
+                id="memoryBar"
+            ></div>
+
+        </div>
+
+    </div>
 
 
-<div class="card">
+    <div class="card">
 
-<div class="metric-label">
-Uptime
-</div>
+        <div class="metric-label">
+            Storage
+        </div>
 
-<div class="metric-value">
-12d
-</div>
+        <div
+            class="metric-value"
+            id="storage"
+        >
+            --
+        </div>
 
-<div class="metric-label">
-Server #01
-</div>
+        <div
+            class="metric-label"
+            id="storageLabel"
+        >
+            Waiting for server
+        </div>
 
-</div>
+        <div class="progress">
+
+            <div
+                class="progress-fill"
+                id="storageBar"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="metric-label">
+            Uptime
+        </div>
+
+        <div
+            class="metric-value"
+            id="uptime"
+        >
+            --
+        </div>
+
+        <div
+            class="metric-label"
+            id="serverName"
+        >
+            Server #01
+        </div>
+
+    </div>
+
 
 </div>
 
@@ -458,114 +1188,19 @@ Server #01
 
 <div class="panel card">
 
-<div class="panel-title">
-Services
-</div>
+    <div class="panel-title">
+        Services
+    </div>
 
 
-<div class="service-row">
+    <div
+        id="services"
+        class="loading"
+    >
 
-<div class="service-left">
+        Loading services...
 
-<div class="service-icon">🌐</div>
-
-<div>
-<strong>Web Server</strong>
-<br>
-<small>Nginx</small>
-</div>
-
-</div>
-
-<span class="badge">
-ONLINE
-</span>
-
-</div>
-
-
-<div class="service-row">
-
-<div class="service-left">
-
-<div class="service-icon">🗄️</div>
-
-<div>
-<strong>Database</strong>
-<br>
-<small>PostgreSQL</small>
-</div>
-
-</div>
-
-<span class="badge">
-ONLINE
-</span>
-
-</div>
-
-
-<div class="service-row">
-
-<div class="service-left">
-
-<div class="service-icon">🎵</div>
-
-<div>
-<strong>Kulzzy Storage</strong>
-<br>
-<small>Audio & Files</small>
-</div>
-
-</div>
-
-<span class="badge">
-ONLINE
-</span>
-
-</div>
-
-
-<div class="service-row">
-
-<div class="service-left">
-
-<div class="service-icon">💻</div>
-
-<div>
-<strong>Kulzzy Code Hub</strong>
-<br>
-<small>Repositories</small>
-</div>
-
-</div>
-
-<span class="badge">
-ONLINE
-</span>
-
-</div>
-
-
-<div class="service-row">
-
-<div class="service-left">
-
-<div class="service-icon">📡</div>
-
-<div>
-<strong>Radio Stream</strong>
-<br>
-<small>Kulzzy Radio</small>
-</div>
-
-</div>
-
-<span class="badge">
-ONLINE
-</span>
-
-</div>
+    </div>
 
 </div>
 
@@ -574,41 +1209,73 @@ ONLINE
 
 <div class="panel card">
 
-<div class="panel-title">
-Recent Activity
+    <div class="panel-title">
+        Recent Activity
+    </div>
+
+
+    <div
+        class="service-row"
+    >
+
+        <span>
+            Control Center initialized
+        </span>
+
+        <small>
+            v1.0
+        </small>
+
+    </div>
+
+
+    <div
+        class="service-row"
+    >
+
+        <span>
+            Server Status API connected
+        </span>
+
+        <small>
+            API
+        </small>
+
+    </div>
+
 </div>
 
-<div class="service-row">
-<span>Control Center initialized</span>
-<small>v1.0</small>
-</div>
-
-<div class="service-row">
-<span>Server API awaiting connection</span>
-<small>Pending</small>
-</div>
-
-</div>
 
 </section>
 
 
-<!-- WEBSITES -->
+<!-- =====================================================
+     WEBSITES
+===================================================== -->
 
-<section id="websites" class="page">
+<section
+    id="websites"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
-<h1>Websites</h1>
-<div class="subtitle">
-Manage Kulzzy websites.
-</div>
-</div>
+    <div>
 
-<button class="gold">
-+ Add Website
-</button>
+        <h1>
+            Websites
+        </h1>
+
+        <div class="subtitle">
+            Manage Kulzzy websites.
+        </div>
+
+    </div>
+
+
+    <button class="gold">
+        + Add Website
+    </button>
 
 </div>
 
@@ -620,13 +1287,27 @@ Manage Kulzzy websites.
 <thead>
 
 <tr>
-<th>Website</th>
-<th>Status</th>
-<th>Server</th>
-<th>Action</th>
+
+<th>
+Website
+</th>
+
+<th>
+Status
+</th>
+
+<th>
+Server
+</th>
+
+<th>
+Action
+</th>
+
 </tr>
 
 </thead>
+
 
 <tbody>
 
@@ -637,19 +1318,52 @@ www.kulzzyradio.com
 </td>
 
 <td>
+
 <span class="badge">
 ONLINE
 </span>
+
 </td>
 
 <td>
-server-01
+kulzzy-server-01
 </td>
 
 <td>
+
 <button class="primary">
 Manage
 </button>
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+test.kulzzyradio.com
+</td>
+
+<td>
+
+<span class="badge warning">
+DEVELOPMENT
+</span>
+
+</td>
+
+<td>
+kulzzy-server-01
+</td>
+
+<td>
+
+<button class="primary">
+Manage
+</button>
+
 </td>
 
 </tr>
@@ -663,24 +1377,33 @@ Manage
 </section>
 
 
-<!-- STORAGE -->
+<!-- =====================================================
+     STORAGE
+===================================================== -->
 
-<section id="storage" class="page">
+<section
+    id="storage"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
-<h1>Audio & Storage</h1>
+    <div>
 
-<div class="subtitle">
-Kulzzy-owned storage.
-</div>
+        <h1>
+            Audio & Storage
+        </h1>
 
-</div>
+        <div class="subtitle">
+            Kulzzy-owned media storage.
+        </div>
 
-<button class="gold">
-+ Upload Audio
-</button>
+    </div>
+
+
+    <button class="gold">
+        + Upload Audio
+    </button>
 
 </div>
 
@@ -692,13 +1415,27 @@ Kulzzy-owned storage.
 <thead>
 
 <tr>
-<th>File</th>
-<th>Type</th>
-<th>Size</th>
-<th>Status</th>
+
+<th>
+File
+</th>
+
+<th>
+Type
+</th>
+
+<th>
+Size
+</th>
+
+<th>
+Status
+</th>
+
 </tr>
 
 </thead>
+
 
 <tbody>
 
@@ -717,9 +1454,36 @@ Audio
 </td>
 
 <td>
+
 <span class="badge">
 READY
 </span>
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+celebrants/
+</td>
+
+<td>
+Folder
+</td>
+
+<td>
+—
+</td>
+
+<td>
+
+<span class="badge">
+READY
+</span>
+
 </td>
 
 </tr>
@@ -733,26 +1497,34 @@ READY
 </section>
 
 
-<!-- DATABASE -->
+<!-- =====================================================
+     DATABASE
+===================================================== -->
 
-<section id="database" class="page">
+<section
+    id="database"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
+    <div>
 
-<h1>Database</h1>
+        <h1>
+            Database
+        </h1>
 
-<div class="subtitle">
-Kulzzy PostgreSQL database.
-</div>
+        <div class="subtitle">
+            Kulzzy PostgreSQL database.
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 
 <div class="metrics">
+
 
 <div class="card">
 
@@ -778,35 +1550,48 @@ Connections
 </div>
 
 <div class="metric-value">
-8
+—
+</div>
+
+<div class="metric-label">
+Awaiting real server
 </div>
 
 </div>
+
 
 </div>
 
 </section>
 
 
-<!-- CODE -->
+<!-- =====================================================
+     CODE HUB
+===================================================== -->
 
-<section id="code" class="page">
+<section
+    id="code"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
+    <div>
 
-<h1>Kulzzy Code Hub</h1>
+        <h1>
+            Kulzzy Code Hub
+        </h1>
 
-<div class="subtitle">
-Your own repository system.
-</div>
+        <div class="subtitle">
+            Your future self-hosted code platform.
+        </div>
 
-</div>
+    </div>
 
-<button class="gold">
-+ Repository
-</button>
+
+    <button class="gold">
+        + Repository
+    </button>
 
 </div>
 
@@ -818,13 +1603,27 @@ Your own repository system.
 <thead>
 
 <tr>
-<th>Repository</th>
-<th>Visibility</th>
-<th>Branch</th>
-<th>Status</th>
+
+<th>
+Repository
+</th>
+
+<th>
+Visibility
+</th>
+
+<th>
+Branch
+</th>
+
+<th>
+Status
+</th>
+
 </tr>
 
 </thead>
+
 
 <tbody>
 
@@ -843,9 +1642,36 @@ main
 </td>
 
 <td>
+
 <span class="badge">
 READY
 </span>
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+KULZZY-COMMUNITY
+</td>
+
+<td>
+Private
+</td>
+
+<td>
+main
+</td>
+
+<td>
+
+<span class="badge">
+READY
+</span>
+
 </td>
 
 </tr>
@@ -859,21 +1685,28 @@ READY
 </section>
 
 
-<!-- RADIO -->
+<!-- =====================================================
+     RADIO
+===================================================== -->
 
-<section id="radio" class="page">
+<section
+    id="radio"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
+    <div>
 
-<h1>Radio</h1>
+        <h1>
+            Radio
+        </h1>
 
-<div class="subtitle">
-Kulzzy streaming infrastructure.
-</div>
+        <div class="subtitle">
+            Kulzzy streaming infrastructure.
+        </div>
 
-</div>
+    </div>
 
 </div>
 
@@ -897,25 +1730,33 @@ READY
 </section>
 
 
-<!-- USERS -->
+<!-- =====================================================
+     USERS
+===================================================== -->
 
-<section id="users" class="page">
+<section
+    id="users"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
+    <div>
 
-<h1>Users</h1>
+        <h1>
+            Users
+        </h1>
 
-<div class="subtitle">
-Infrastructure administrators.
-</div>
+        <div class="subtitle">
+            Infrastructure administrators.
+        </div>
 
-</div>
+    </div>
 
-<button class="gold">
-+ Administrator
-</button>
+
+    <button class="gold">
+        + Administrator
+    </button>
 
 </div>
 
@@ -925,10 +1766,19 @@ Infrastructure administrators.
 <div class="service-row">
 
 <div>
-<strong>Kulzzy Administrator</strong>
+
+<strong>
+Kulzzy Administrator
+</strong>
+
 <br>
-<small>Owner</small>
+
+<small>
+Owner
+</small>
+
 </div>
+
 
 <span class="badge">
 FULL ACCESS
@@ -941,33 +1791,49 @@ FULL ACCESS
 </section>
 
 
-<!-- SECURITY -->
+<!-- =====================================================
+     SECURITY
+===================================================== -->
 
-<section id="security" class="page">
+<section
+    id="security"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
+    <div>
 
-<h1>Security</h1>
+        <h1>
+            Security
+        </h1>
 
-<div class="subtitle">
-Server protection.
-</div>
+        <div class="subtitle">
+            Kulzzy server protection.
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 
 <div class="card">
 
+
 <div class="service-row">
 
 <div>
-<strong>🧱 Firewall</strong>
+
+<strong>
+🧱 Firewall
+</strong>
+
 <br>
-<small>Inbound protection</small>
+
+<small>
+Inbound protection
+</small>
+
 </div>
 
 <span class="badge">
@@ -980,9 +1846,17 @@ ACTIVE
 <div class="service-row">
 
 <div>
-<strong>🔑 SSH Keys</strong>
+
+<strong>
+🔑 SSH Keys
+</strong>
+
 <br>
-<small>Key authentication</small>
+
+<small>
+Key authentication
+</small>
+
 </div>
 
 <span class="badge">
@@ -995,9 +1869,17 @@ ACTIVE
 <div class="service-row">
 
 <div>
-<strong>🔒 HTTPS</strong>
+
+<strong>
+🔒 HTTPS
+</strong>
+
 <br>
-<small>Encrypted traffic</small>
+
+<small>
+Encrypted traffic
+</small>
+
 </div>
 
 <span class="badge">
@@ -1006,45 +1888,63 @@ READY
 
 </div>
 
+
 </div>
 
 </section>
 
 
-<!-- BACKUPS -->
+<!-- =====================================================
+     BACKUPS
+===================================================== -->
 
-<section id="backups" class="page">
+<section
+    id="backups"
+    class="page"
+>
 
 <div class="page-header">
 
-<div>
+    <div>
 
-<h1>Backups</h1>
+        <h1>
+            Backups
+        </h1>
 
-<div class="subtitle">
-Kulzzy disaster recovery.
-</div>
+        <div class="subtitle">
+            Kulzzy disaster recovery.
+        </div>
 
-</div>
+    </div>
 
-<button class="gold">
-Run Backup
-</button>
+
+    <button class="gold">
+        Run Backup
+    </button>
 
 </div>
 
 
 <div class="card">
 
+
 <div class="service-row">
 
 <div>
-<strong>Server Configuration</strong>
+
+<strong>
+Server Configuration
+</strong>
+
 <br>
-<small>Daily backup</small>
+
+<small>
+Daily backup
+</small>
+
 </div>
 
-<span class="badge">
+<span class="badge warning">
 PLANNED
 </span>
 
@@ -1054,16 +1954,25 @@ PLANNED
 <div class="service-row">
 
 <div>
-<strong>Media Storage</strong>
+
+<strong>
+Media Storage
+</strong>
+
 <br>
-<small>Daily backup</small>
+
+<small>
+Daily backup
+</small>
+
 </div>
 
-<span class="badge">
+<span class="badge warning">
 PLANNED
 </span>
 
 </div>
+
 
 </div>
 
@@ -1075,98 +1984,416 @@ PLANNED
 </div>
 
 
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
 <script>
 
-const navItems =
-document.querySelectorAll(".nav-item");
 
-const pages =
-document.querySelectorAll(".page");
+/* =====================================================
+   DEVELOPMENT LOGIN
+===================================================== */
+
+const loginScreen =
+    document.getElementById(
+        "loginScreen"
+    );
 
 
-navItems.forEach(item => {
+const loginForm =
+    document.getElementById(
+        "loginForm"
+    );
 
-item.addEventListener("click", () => {
 
-navItems.forEach(i =>
-i.classList.remove("active")
+const loginError =
+    document.getElementById(
+        "loginError"
+    );
+
+
+loginForm.addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+
+        const username =
+            document
+                .getElementById("username")
+                .value
+                .trim();
+
+
+        const password =
+            document
+                .getElementById("password")
+                .value;
+
+
+        /*
+            TEMPORARY DEVELOPMENT LOGIN
+
+            This is NOT production security.
+
+            We will replace this with
+            server-side authentication.
+        */
+
+        if (
+            username === "admin" &&
+            password === "kulzzy-dev"
+        ) {
+
+            sessionStorage.setItem(
+                "kulzzy_authenticated",
+                "true"
+            );
+
+
+            loginScreen.style.display =
+                "none";
+
+
+            loginError.textContent = "";
+
+
+            loadServerStatus();
+
+        }
+
+        else {
+
+            loginError.textContent =
+                "Invalid development login.";
+
+        }
+
+    }
 );
 
-item.classList.add("active");
 
+/* =====================================================
+   CHECK LOGIN
+===================================================== */
 
-pages.forEach(page =>
-page.classList.remove("active")
-);
+if (
+    sessionStorage.getItem(
+        "kulzzy_authenticated"
+    ) === "true"
+) {
 
+    loginScreen.style.display =
+        "none";
 
-const target =
-document.getElementById(
-item.dataset.page
-);
-
-if(target){
-target.classList.add("active");
 }
 
-});
 
-});
+/* =====================================================
+   LOGOUT
+===================================================== */
 
+function logout() {
+
+    sessionStorage.removeItem(
+        "kulzzy_authenticated"
+    );
+
+
+    location.reload();
+
+}
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+const navItems =
+    document.querySelectorAll(
+        ".nav-item"
+    );
+
+
+const pages =
+    document.querySelectorAll(
+        ".page"
+    );
+
+
+navItems.forEach(
+    function(item) {
+
+        item.addEventListener(
+            "click",
+            function() {
+
+
+                navItems.forEach(
+                    function(nav) {
+
+                        nav.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+                item.classList.add(
+                    "active"
+                );
+
+
+                pages.forEach(
+                    function(page) {
+
+                        page.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+                const target =
+                    document.getElementById(
+                        item.dataset.page
+                    );
+
+
+                if (target) {
+
+                    target.classList.add(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   SERVER STATUS API
+===================================================== */
 
 async function loadServerStatus() {
 
     try {
 
         const response =
-            await fetch("api/server-status.json", {
-                cache: "no-store"
-            });
+            await fetch(
+                "api/server-status.json",
+                {
+                    cache: "no-store"
+                }
+            );
+
 
         if (!response.ok) {
-            throw new Error("Server status unavailable");
+
+            throw new Error(
+                "Server status unavailable"
+            );
+
         }
 
-        const data = await response.json();
+
+        const data =
+            await response.json();
+
 
         /* CPU */
 
         const cpu =
-            data.hardware.cpu.usage_percent;
-
-        document.getElementById("cpu")
-            .textContent = cpu + "%";
-
-        document.getElementById("cpuBar")
-            .style.width = cpu + "%";
+            Number(
+                data.hardware
+                    .cpu
+                    .usage_percent
+            );
 
 
-        /* SERVER STATUS */
+        document.getElementById(
+            "cpu"
+        ).textContent =
+            cpu + "%";
+
+
+        document.getElementById(
+            "cpuBar"
+        ).style.width =
+            Math.min(cpu,100) + "%";
+
+
+        /* MEMORY */
+
+        const totalMemory =
+            Number(
+                data.hardware
+                    .memory
+                    .total_gb
+            );
+
+
+        const memoryUsed =
+            Number(
+                data.hardware
+                    .memory
+                    .used_gb
+            );
+
+
+        const memoryPercent =
+            Number(
+                data.hardware
+                    .memory
+                    .usage_percent
+            );
+
+
+        document.getElementById(
+            "memory"
+        ).textContent =
+            memoryUsed + " GB";
+
+
+        document.getElementById(
+            "memoryLabel"
+        ).textContent =
+            "of " +
+            totalMemory +
+            " GB";
+
+
+        document.getElementById(
+            "memoryBar"
+        ).style.width =
+            Math.min(
+                memoryPercent,
+                100
+            ) + "%";
+
+
+        /* STORAGE */
+
+        const storageUsed =
+            Number(
+                data.hardware
+                    .storage
+                    .used_tb
+            );
+
+
+        const storageTotal =
+            Number(
+                data.hardware
+                    .storage
+                    .total_tb
+            );
+
+
+        const storagePercent =
+            Number(
+                data.hardware
+                    .storage
+                    .usage_percent
+            );
+
+
+        document.getElementById(
+            "storage"
+        ).textContent =
+            storageUsed + " TB";
+
+
+        document.getElementById(
+            "storageLabel"
+        ).textContent =
+            "of " +
+            storageTotal +
+            " TB";
+
+
+        document.getElementById(
+            "storageBar"
+        ).style.width =
+            Math.min(
+                storagePercent,
+                100
+            ) + "%";
+
+
+        /* SERVER */
+
+        document.getElementById(
+            "serverName"
+        ).textContent =
+            data.server.name;
+
+
+        /* UPTIME */
+
+        document.getElementById(
+            "uptime"
+        ).textContent =
+            data.server.uptime ||
+            "--";
+
+
+        /* STATUS */
 
         const status =
             data.server.status;
 
+
         const statusDot =
-            document.querySelector(".status-dot");
+            document.getElementById(
+                "statusDot"
+            );
+
 
         const statusText =
-            document.querySelector(".server-status");
+            document.getElementById(
+                "statusText"
+            );
 
-        if (status === "online") {
 
-            statusDot.style.background = "#22c55e";
+        if (
+            status === "online"
+        ) {
 
-            statusText.innerHTML =
-                '<div class="status-dot"></div> Server Online';
+            statusDot.style.background =
+                "#22c55e";
 
-        } else {
 
-            statusDot.style.background = "#d64545";
-
-            statusText.innerHTML =
-                '<div class="status-dot"></div> Server Offline';
+            statusText.textContent =
+                "Server Online";
 
         }
+
+        else {
+
+            statusDot.style.background =
+                "#d64545";
+
+
+            statusText.textContent =
+                "Server Offline";
+
+        }
+
+
+        /* SERVICES */
+
+        renderServices(
+            data.services
+        );
 
     }
 
@@ -1177,31 +2404,190 @@ async function loadServerStatus() {
             error
         );
 
+
+        document.getElementById(
+            "statusDot"
+        ).style.background =
+            "#d64545";
+
+
+        document.getElementById(
+            "statusText"
+        ).textContent =
+            "API Offline";
+
+
+        document.getElementById(
+            "services"
+        ).innerHTML =
+
+            '<div class="service-row">' +
+
+            '<span>' +
+            'Server API unavailable' +
+            '</span>' +
+
+            '<span class="badge danger">' +
+            'OFFLINE' +
+            '</span>' +
+
+            '</div>';
+
     }
 
 }
 
 
-/* Load when dashboard opens */
+/* =====================================================
+   SERVICES
+===================================================== */
+
+function renderServices(
+    services
+) {
+
+    const container =
+        document.getElementById(
+            "services"
+        );
+
+
+    const serviceList = [
+
+        {
+            icon: "🌐",
+            name: "Web Server",
+            key: "web_server",
+            description: "Nginx"
+        },
+
+        {
+            icon: "🗄️",
+            name: "Database",
+            key: "database",
+            description: "PostgreSQL"
+        },
+
+        {
+            icon: "🎵",
+            name: "Kulzzy Storage",
+            key: "storage",
+            description: "Audio & Files"
+        },
+
+        {
+            icon: "💻",
+            name: "Code Hub",
+            key: "code_hub",
+            description: "Repositories"
+        },
+
+        {
+            icon: "📡",
+            name: "Radio Stream",
+            key: "radio_stream",
+            description: "Kulzzy Radio"
+        }
+
+    ];
+
+
+    container.innerHTML = "";
+
+
+    serviceList.forEach(
+        function(service) {
+
+
+            const state =
+                services[
+                    service.key
+                ] || "unknown";
+
+
+            const online =
+                state === "online";
+
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "service-row";
+
+
+            row.innerHTML =
+
+                '<div class="service-left">' +
+
+                    '<div class="service-icon">' +
+                        service.icon +
+                    '</div>' +
+
+                    '<div>' +
+
+                        '<strong>' +
+                            service.name +
+                        '</strong>' +
+
+                        '<br>' +
+
+                        '<small>' +
+                            service.description +
+                        '</small>' +
+
+                    '</div>' +
+
+                '</div>' +
+
+                '<span class="' +
+                    (
+                        online
+                        ? "badge"
+                        : "badge danger"
+                    ) +
+                '">' +
+
+                    (
+                        online
+                        ? "ONLINE"
+                        : state.toUpperCase()
+                    ) +
+
+                '</span>';
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   INITIAL SERVER LOAD
+===================================================== */
 
 loadServerStatus();
 
 
-/* Refresh every 30 seconds */
+/* =====================================================
+   AUTO REFRESH
+===================================================== */
 
 setInterval(
     loadServerStatus,
     30000
 );
 
-
-/* Manual refresh button */
-
-function refreshServer() {
-
-    loadServerStatus();
-}
 </script>
+
 
 </body>
 </html>
