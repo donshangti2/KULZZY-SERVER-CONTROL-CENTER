@@ -1,0 +1,30 @@
+// =====================================================
+// KULZZY DNS OPTIONS
+// VERSION 1.0
+// =====================================================
+
+options {
+
+    directory "/var/cache/bind";
+
+    listen-on {
+        any;
+    };
+
+    listen-on-v6 {
+        any;
+    };
+
+    allow-query {
+        any;
+    };
+
+    recursion no;
+
+    dnssec-validation auto;
+
+    auth-nxdomain no;
+
+    minimal-responses yes;
+
+};
