@@ -1,71 +1,29 @@
 $TTL 300
 
 @       IN      SOA     ns1.kulzzyradio.com. admin.kulzzyradio.com. (
-                        2026082701
+                        2026082801
                         3600
                         900
-                        1209600
+                        604800
                         300
 )
-
-; =====================================================
-; KULZZY RADIO DNS ZONE
-; =====================================================
-
-; Nameservers
 
 @       IN      NS      ns1.kulzzyradio.com.
 @       IN      NS      ns2.kulzzyradio.com.
 
+ns1     IN      A       SERVER_IP
+ns2     IN      A       SERVER_IP
 
-; =====================================================
-; NAMESERVERS
-; =====================================================
+@       IN      A       SERVER_IP
 
-ns1     IN      A       SERVER_PUBLIC_IP
+www     IN      A       SERVER_IP
 
-ns2     IN      A       SERVER_PUBLIC_IP
+api     IN      A       SERVER_IP
 
+control IN      A       SERVER_IP
 
-; =====================================================
-; MAIN WEBSITE
-; =====================================================
+code    IN      A       SERVER_IP
 
-@       IN      A       SERVER_PUBLIC_IP
+radio   IN      A       SERVER_IP
 
-www     IN      A       SERVER_PUBLIC_IP
-
-
-; =====================================================
-; KULZZY CONTROL CENTER
-; =====================================================
-
-control IN      A       SERVER_PUBLIC_IP
-
-
-; =====================================================
-; KULZZY API
-; =====================================================
-
-api     IN      A       SERVER_PUBLIC_IP
-
-
-; =====================================================
-; KULZZY CODE HUB
-; =====================================================
-
-code    IN      A       SERVER_PUBLIC_IP
-
-
-; =====================================================
-; KULZZY RADIO
-; =====================================================
-
-radio   IN      A       SERVER_PUBLIC_IP
-
-
-; =====================================================
-; KULZZY STORAGE
-; =====================================================
-
-storage IN      A       SERVER_PUBLIC_IP
+storage IN      A       SERVER_IP
